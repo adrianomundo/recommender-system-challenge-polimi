@@ -50,8 +50,10 @@ URM_all.tocsr()
 class RandomRecommender(object):
 
     def fit(self, urm_train):
-        self.numItems = urm_train.shape[0]
+        # shape[0] --> number of rows (# users), shape[1] --> number of columns (# items)
+        self.numItems = urm_train.shape[1]
 
+    # at=5 is the default value in case not furnished by the user
     def recommend(self, user_id, at=5):
         recommended_items = np.random.choice(self.numItems, at)
 
@@ -82,13 +84,19 @@ ratingList = np.array(ratingList)
 URM_train = sps.coo_matrix((ratingList[train_mask], (userList[train_mask], itemList[train_mask])))
 URM_train = URM_train.tocsr()
 
-# print(URM_train)
+# print(np.sum(URM_train))
 # print(URM_train.shape[0])
+# print(URM_train.shape[1])
 
 test_mask = np.logical_not(train_mask)
 
 URM_test = sps.coo_matrix((ratingList[test_mask], (userList[test_mask], itemList[test_mask])))
 URM_test = URM_test.tocsr()
+
+# print(np.sum(URM_test))
+# print(URM_test.shape[0])
+# print(URM_test.shape[1])
+
 
 randomRecommender = RandomRecommender()
 randomRecommender.fit(URM_train)
@@ -99,7 +107,7 @@ userList_unique = list(set(userList))
 # print(len(userList_unique))
 
 for user in userList_unique:
-    recommended_items = randomRecommender.recommend(user, at=10)
+    recommended_items = randomRecommender.recommend(user, 10)
     results[user] = recommended_items
 
 create_csv(results)
