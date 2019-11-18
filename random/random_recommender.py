@@ -103,11 +103,14 @@ randomRecommender.fit(URM_train)
 
 results = {}
 
-userList_unique = list(set(userList))
-# print(len(userList_unique))
+# TODO Find a better way to skip the header on the data_target_users_test.csv file
+target_path = "../data/data_target_users_test_no_header.csv"
+target_file = open(target_path, 'r')
+target_file.seek(0)
 
-for user in userList_unique:
-    recommended_items = randomRecommender.recommend(user, 10)
-    results[user] = recommended_items
+for line in target_file:
+    line = line.rstrip('\n')
+    recommended_items = randomRecommender.recommend(line, 10)
+    results[line] = recommended_items
 
 create_csv(results)
