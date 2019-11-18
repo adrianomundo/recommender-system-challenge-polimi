@@ -2,12 +2,12 @@ import os
 from datetime import datetime
 
 
-def create_csv(results, results_dir='./'):
+def create_csv(results, results_dir='../data/results'):
 
-    csv_fname = 'results_'
-    csv_fname += datetime.now().strftime('%b%d_%H-%M-%S') + '.csv'
+    csv_file_name = 'results_'
+    csv_file_name += datetime.now().strftime('%b%d_%H-%M-%S') + '.csv'
 
-    with open(os.path.join(results_dir, csv_fname), 'w') as f:
+    with open(os.path.join(results_dir, csv_file_name), 'w') as f:
 
         f.write('user_id,item_list')
 
