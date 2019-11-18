@@ -24,15 +24,44 @@ URM_all.tocsr()
 # print(URM_all)
 
 
-class RandomRecommender(object):
+class TopPopRecommender(object):
 
-    def fit(self, urm_train):
-        # shape[0] --> number of rows (# users), shape[1] --> number of columns (# items)
-        self.numItems = urm_train.shape[1]
+    def fit(self, URM_train):
 
-    # at=5 is the default value in case not furnished by the user
-    def recommend(self, user_id, at=5):
-        recommended_items = np.random.choice(self.numItems, at)
+        self.URM_train = URM_train
+
+        # (URM_train > 0) --> applies a filter to URM_train:
+        # if an element of URM_train is > 0 --> True
+        # if an element of URM_train is < 0 --> False
+        # URM_train becomes a matrix of boolean values
+        # sum(axis=0) --> sums all the item in each column
+        itemPopularity = (URM_train > 0).sum(axis=0)
+        # squeeze to eliminate the extra dimension (dimension lost in the step above)
+        itemPopularity = np.array(itemPopularity).squeeze()
+
+        # argsort returns the indices that would sort an array
+        # in this case the items' id
+        self.popularItems = np.argsort(itemPopularity)
+        # flip inverts the array (from the most popular to the less popular)
+        self.popularItems = np.flip(self.popularItems, axis=0)
+
+    def recommend(self, user_id, at=5, remove_seen=True):
+
+        if remove_seen:
+
+            # in1d --> tests whether each element of a 1-D array is also present in a second array
+            # invert=XXX --> if True, the values in the returned array are inverted
+            # (that is, False where an element of ar1 is in ar2 and True otherwise)
+            unseen_items_mask = np.in1d(self.popularItems, self.URM_train[user_id].indices,
+                                        assume_unique=True, invert=True)
+
+            # applies the mask in order to eliminate the already seen elements
+            unseen_items = self.popularItems[unseen_items_mask]
+
+            recommended_items = unseen_items[0:at]
+
+        else:
+            recommended_items = self.popularItems[0:at]
 
         return recommended_items
 
@@ -74,9 +103,8 @@ URM_test = URM_test.tocsr()
 # print(URM_test.shape[0])
 # print(URM_test.shape[1])
 
-
-randomRecommender = RandomRecommender()
-randomRecommender.fit(URM_train)
+topPopRecommender_removeSeen = TopPopRecommender()
+topPopRecommender_removeSeen.fit(URM_train)
 
 results = {}
 
@@ -87,7 +115,7 @@ target_file.seek(0)
 
 for line in target_file:
     line = int(line.rstrip('\n'))
-    recommended_items = randomRecommender.recommend(line, 10)
+    recommended_items = topPopRecommender_removeSeen.recommend(line, 10)
     results[line] = recommended_items
 
 create_csv(results)
