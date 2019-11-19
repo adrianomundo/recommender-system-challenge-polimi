@@ -20,7 +20,7 @@ ratingList = list(ratingList)
 URM_all = sps.coo_matrix((ratingList, (userList, itemList)))
 # print(URM_all)
 
-URM_all.tocsr()
+URM_all = URM_all.tocsr()
 # print(URM_all)
 
 
@@ -65,6 +65,8 @@ class TopPopRecommender(object):
 
         return recommended_items
 
+# -------------------------------------------------
+# URM_all split with TopPopRecommender not needed
 
 train_test_split = 0.80
 
@@ -103,8 +105,10 @@ URM_test = URM_test.tocsr()
 # print(URM_test.shape[0])
 # print(URM_test.shape[1])
 
+# -------------------------------------------------
+
 topPopRecommender_removeSeen = TopPopRecommender()
-topPopRecommender_removeSeen.fit(URM_train)
+topPopRecommender_removeSeen.fit(URM_all)
 
 results = {}
 

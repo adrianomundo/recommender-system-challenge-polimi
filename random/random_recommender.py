@@ -20,7 +20,7 @@ ratingList = list(ratingList)
 URM_all = sps.coo_matrix((ratingList, (userList, itemList)))
 # print(URM_all)
 
-URM_all.tocsr()
+URM_all = URM_all.tocsr()
 # print(URM_all)
 
 
@@ -36,6 +36,8 @@ class RandomRecommender(object):
 
         return recommended_items
 
+# -------------------------------------------------
+# URM_all split with RandomRecommender not needed
 
 train_test_split = 0.80
 
@@ -74,9 +76,10 @@ URM_test = URM_test.tocsr()
 # print(URM_test.shape[0])
 # print(URM_test.shape[1])
 
+# -------------------------------------------------
 
 randomRecommender = RandomRecommender()
-randomRecommender.fit(URM_train)
+randomRecommender.fit(URM_all)
 
 results = {}
 
