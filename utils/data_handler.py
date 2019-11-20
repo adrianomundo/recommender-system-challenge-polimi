@@ -65,43 +65,30 @@ def urm_builder(urm_tuples):
     # A sparse matrix in COOrdinate format
     # A sparse matrix is a matrix in which most of the elements are zero
     urm_all = sps.coo_matrix((rating_list, (user_list, item_list)))
-
     urm_all = urm_all.tocsr()
 
     return urm_all
 
 
-def urm_splitter(urm_all, user_list, item_list, rating_list, train_test_split):
+def train_test_holdout(urm_all, train_test_split=0.8):
 
     # Get the count of explicitly-stored values (non-zeros)
     num_interactions = urm_all.nnz
-    # print(num_interactions)
+
+    urm_all = urm_all.tocoo()
+    shape = urm_all.shape
 
     # Array randomly filled by True or False values (len == num_interactions)
     train_mask = np.random.choice([True, False], num_interactions, p=[train_test_split, 1 - train_test_split])
-    # print(np.sum(train_mask))
-    # print(train_mask)
-    # print(len(train_mask))
 
-    user_list = np.array(user_list)
-    item_list = np.array(item_list)
-    rating_list = np.array(rating_list)
-
-    urm_train = sps.coo_matrix((rating_list[train_mask], (user_list[train_mask], item_list[train_mask])))
+    urm_train = sps.coo_matrix((urm_all.data[train_mask],
+                                (urm_all.row[train_mask], urm_all.col[train_mask])), shape=shape)
     urm_train = urm_train.tocsr()
-
-    # print(np.sum(urm_train))
-    # print("URM_train shape " + str(urm_train.shape))
-    # print(urm_train.count_nonzero())
 
     test_mask = np.logical_not(train_mask)
 
-    urm_test = sps.coo_matrix((rating_list[test_mask], (user_list[test_mask], item_list[test_mask])))
+    urm_test = sps.coo_matrix((urm_all.data[test_mask], (urm_all.row[test_mask], urm_all.col[test_mask])), shape=shape)
     urm_test = urm_test.tocsr()
-
-    # print(np.sum(urm_test))
-    # print("URM_test shape " + str(urm_test.shape))
-    # print(urm_test.count_nonzero())
 
     return urm_train, urm_test
 

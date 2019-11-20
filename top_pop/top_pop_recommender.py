@@ -47,8 +47,7 @@ class TopPopRecommender(object):
 
 
 # URM_all split with TopPopRecommender not needed
-user_list, item_list, rating_list = user_item_rating_lists(urm_tuples)
-urm_train, urm_test = urm_splitter(urm_all, user_list, item_list, rating_list, 0.8)
+urm_train, urm_test = train_test_holdout(urm_all, 0.8)
 
 topPopRecommender_removeSeen = TopPopRecommender()
 topPopRecommender_removeSeen.fit(urm_all)
