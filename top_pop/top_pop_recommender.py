@@ -1,6 +1,6 @@
 from utils.data_handler import *
 
-urm_tuples = data_train_csv_splitter()
+urm_tuples = data_csv_splitter("urm")
 urm_all = urm_builder(urm_tuples)
 
 
@@ -46,7 +46,7 @@ class TopPopRecommender(object):
         return recommended_items
 
 
-# URM_all split with TopPopRecommender not needed
+# urm_all split with TopPopRecommender not needed
 urm_train, urm_test = train_test_holdout(urm_all, 0.8)
 
 topPopRecommender_removeSeen = TopPopRecommender()

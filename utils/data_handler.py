@@ -4,11 +4,24 @@ import scipy.sparse as sps
 import numpy as np
 
 
-def data_train_csv_splitter():
+def data_csv_splitter(data_file):
 
-    # TODO Find a better way to skip the header on the data_train.csv file
-    urm_path = "../data/data_train_no_header.csv"
-    urm_file = open(urm_path, 'r')
+    path = ""
+
+    if data_file == "urm":
+        path = "../data/data_train.csv"
+    elif data_file == "icm_asset":
+        path = "../data/data_ICM_asset.csv"
+    elif data_file == "icm_price":
+        path = "../data/data_ICM_price.csv"
+    elif data_file == "icm_sub_class":
+        path = "../data/data_ICM_sub_class.csv"
+    elif data_file == "ucm_age":
+        path = "../data/data_UCM_age.csv"
+    elif data_file == "ucm_region":
+        path = "../data/data_UCM_region.csv"
+
+    file = open(path, 'r')
 
     def row_split(row_string):
         split = row_string.split(",")
@@ -22,25 +35,28 @@ def data_train_csv_splitter():
 
         return result
 
-    urm_file.seek(0)
-    urm_tuples = []
+    file.seek(0)
+    tuples = []
 
-    for line in urm_file:
-        urm_tuples.append(row_split(line))
+    for line in file:
+        if line == "row,col,data\n":
+            continue
+        tuples.append(row_split(line))
 
-    return urm_tuples
+    return tuples
 
 
 def target_list():
 
-    # TODO Find a better way to skip the header on the data_target_users_test.csv file
-    target_path = "../data/data_target_users_test_no_header.csv"
+    target_path = "../data/data_target_users_test.csv"
     target_file = open(target_path, 'r')
 
     target_file.seek(0)
     target_list = []
 
     for line in target_file:
+        if line == "user_id\n":
+            continue
         line = int(line.rstrip('\n'))
         target_list.append(line)
 
@@ -81,12 +97,14 @@ def train_test_holdout(urm_all, train_test_split=0.8):
     # Array randomly filled by True or False values (len == num_interactions)
     train_mask = np.random.choice([True, False], num_interactions, p=[train_test_split, 1 - train_test_split])
 
+    # shape=shape forces urm_train to have the same dimension of urm_all
     urm_train = sps.coo_matrix((urm_all.data[train_mask],
                                 (urm_all.row[train_mask], urm_all.col[train_mask])), shape=shape)
     urm_train = urm_train.tocsr()
 
     test_mask = np.logical_not(train_mask)
 
+    # shape=shape forces urm_test to have the same dimension of urm_all
     urm_test = sps.coo_matrix((urm_all.data[test_mask], (urm_all.row[test_mask], urm_all.col[test_mask])), shape=shape)
     urm_test = urm_test.tocsr()
 
