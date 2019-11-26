@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import scipy.sparse as sps
+from scipy.sparse import hstack
 import numpy as np
 
 
@@ -63,27 +64,114 @@ def target_list():
     return target_list
 
 
-def user_item_rating_lists(urm_tuples):
+def row_col_data_lists(tuples):
 
-    user_list, item_list, rating_list = zip(*urm_tuples)
+    row_list, col_list, data_list = zip(*tuples)
 
-    user_list = list(user_list)
-    item_list = list(item_list)
-    rating_list = list(rating_list)
+    row_list = list(row_list)
+    col_list = list(col_list)
+    data_list = list(data_list)
 
-    return user_list, item_list, rating_list
+    return row_list, col_list, data_list
 
 
-def urm_builder(urm_tuples):
+def urm_all_builder(urm_tuples):
 
-    user_list, item_list, rating_list = user_item_rating_lists(urm_tuples)
+    users_list, items_list, ratings_list = row_col_data_lists(urm_tuples)
 
     # A sparse matrix in COOrdinate format
     # A sparse matrix is a matrix in which most of the elements are zero
-    urm_all = sps.coo_matrix((rating_list, (user_list, item_list)))
+    urm_all = sps.coo_matrix((ratings_list, (users_list, items_list)))
     urm_all = urm_all.tocsr()
 
     return urm_all
+
+
+def remove_cold_items(urm_all):
+
+    print(urm_all)
+    print(urm_all.indptr[0])
+    print(urm_all.indptr[1])
+    print(urm_all.indices[urm_all.indptr[0]:urm_all.indptr[1]])
+
+    print(urm_all.tocsc())
+    print(urm_all.tocsc().indptr[0])
+    print(urm_all.tocsc().indptr[1])
+    print(urm_all.tocsc().indices[urm_all.indptr[0]:urm_all.indptr[1]])
+
+    # ediff1d: the differences between consecutive elements of an array
+    warm_items_mask = np.ediff1d(urm_all.tocsc().indptr) > 0
+    # arange: returns the range of elements --> arange(3) = array([0, 1, 2])
+    warm_items = np.arange(urm_all.shape[1])[warm_items_mask]
+
+    return warm_items, urm_all[:, warm_items]
+
+
+def remove_cold_users(urm_all):
+
+    warm_users_mask = np.ediff1d(urm_all.tocsr().indptr) > 0
+    warm_users = np.arange(urm_all.shape[0])[warm_users_mask]
+
+    return warm_users, urm_all[warm_users, :]
+
+
+def single_icm_builder(single_icm_tuples):
+
+    items_list, attributes_list, values_list = row_col_data_lists(single_icm_tuples)
+
+    # A sparse matrix in COOrdinate format
+    # A sparse matrix is a matrix in which most of the elements are zero
+    single_icm = sps.coo_matrix((values_list, (items_list, attributes_list)))
+    single_icm = single_icm.tocsr()
+
+    return single_icm
+
+
+def icm_all_builder(icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples):
+
+    # icm_sub_class_tuples already has all the items
+    r1, c1, d1 = row_col_data_lists(icm_asset_tuples)
+    r2, c2, d2 = row_col_data_lists(icm_price_tuples)
+
+    r1_to_r2_elements = set(r1).difference(r2)
+    r2_to_r1_elements = set(r2).difference(r1)
+
+    print("Elements in ICM_asset: " + str(len(icm_asset_tuples)))
+    print("Elements in ICM_price: " + str(len(icm_price_tuples)))
+    print("Elements in ICM_sub_class: " + str(len(icm_sub_class_tuples)))
+    print("Missing values in r2 list:", r1_to_r2_elements)
+    print("Additional values in r2 list:", r2_to_r1_elements)
+
+    icm_price_tuples = icm_add_missing_elements(r1_to_r2_elements, icm_price_tuples)
+    icm_asset_tuples = icm_add_missing_elements(r2_to_r1_elements, icm_asset_tuples)
+
+    icm_asset_tuples = sorted(icm_asset_tuples)
+    icm_price_tuples = sorted(icm_price_tuples)
+    icm_sub_class_tuples = sorted(icm_sub_class_tuples)
+
+    r1, c1, d1 = row_col_data_lists(icm_asset_tuples)
+    r2, c2, d2 = row_col_data_lists(icm_price_tuples)
+    r3, c3, d3 = row_col_data_lists(icm_sub_class_tuples)
+
+    icm_asset = sps.coo_matrix((d1, (r1, c1)))
+    icm_asset = icm_asset.tocsr()
+    icm_price = sps.coo_matrix((d2, (r2, c2)))
+    icm_price = icm_price.tocsr()
+    icm_sub_class = sps.coo_matrix((d3, (r3, c3)))
+    icm_sub_class = icm_sub_class.tocsr()
+
+    icm_all = hstack((icm_asset, icm_price))
+    icm_all = hstack((icm_all, icm_sub_class))
+
+    return icm_all
+
+
+def icm_add_missing_elements(missing_elements, dst):
+
+    for element in missing_elements:
+        dst.append(tuple((element, 0, 0)))
+
+    return dst
 
 
 def train_test_holdout(urm_all, train_test_split=0.8):
@@ -109,6 +197,37 @@ def train_test_holdout(urm_all, train_test_split=0.8):
     urm_test = urm_test.tocsr()
 
     return urm_train, urm_test
+
+
+def train_test_loo(urm_all):
+
+    print("Splitting dataset using LeaveOneOut\n")
+
+    users = urm_all.shape[0]
+    items = urm_all.shape[1]
+
+    urm_train = urm_all.copy()
+
+    for user_id in range(users):
+        num_interactions = urm_train[user_id].nnz
+        if num_interactions > 0:
+            user_profile = urm_train[user_id].indices
+            item_id = np.random.choice(user_profile, 1)
+            urm_train[user_id, item_id] = 0
+
+    urm_test = urm_all - urm_train
+    urm_test = (sps.coo_matrix(urm_test, dtype=int, shape=urm_all.shape)).tocsr()
+    urm_train = (sps.coo_matrix(urm_train, dtype=int, shape=urm_all.shape)).tocsr()
+
+    print('urm_all properties')
+    print('shape =', urm_all.shape)
+    print('nnz =', urm_all.nnz)
+    print('urm_train properties')
+    print('shape =', urm_train.shape)
+    print('nnz =', urm_train.nnz)
+    print('urm_test properties')
+    print('shape =', urm_test.shape)
+    print('nnz =', urm_test.nnz)
 
 
 def create_csv(results, results_dir='../data/results'):

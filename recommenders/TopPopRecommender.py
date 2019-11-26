@@ -1,10 +1,14 @@
 from utils.data_handler import *
 
 urm_tuples = data_csv_splitter("urm")
-urm_all = urm_builder(urm_tuples)
+urm_all = urm_all_builder(urm_tuples)
 
 
 class TopPopRecommender(object):
+
+    def __init__(self):
+        self.popularItems = None
+        self.urm_train = None
 
     def fit(self, urm_train):
 
@@ -25,7 +29,7 @@ class TopPopRecommender(object):
         # flip inverts the array (from the most popular to the less popular)
         self.popularItems = np.flip(self.popularItems, axis=0)
 
-    def recommend(self, user_id, at=5, remove_seen=True):
+    def recommend(self, user_id, at=10, remove_seen=True):
 
         if remove_seen:
 
