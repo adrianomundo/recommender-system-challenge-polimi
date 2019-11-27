@@ -81,38 +81,37 @@ def urm_all_builder(urm_tuples):
 
     # A sparse matrix in COOrdinate format
     # A sparse matrix is a matrix in which most of the elements are zero
-    urm_all = sps.coo_matrix((ratings_list, (users_list, items_list)))
-    urm_all = urm_all.tocsr()
+    urm_all = (sps.coo_matrix((ratings_list, (users_list, items_list)))).tocsr()
 
     return urm_all
 
 
-def remove_cold_items(urm_all):
+def get_warm_items(urm_all):
 
-    print(urm_all)
-    print(urm_all.indptr[0])
-    print(urm_all.indptr[1])
-    print(urm_all.indices[urm_all.indptr[0]:urm_all.indptr[1]])
+    # print(urm_all)
+    # print(urm_all.indptr[0])
+    # print(urm_all.indptr[1])
+    # print(urm_all.indices[urm_all.indptr[0]:urm_all.indptr[1]])
 
-    print(urm_all.tocsc())
-    print(urm_all.tocsc().indptr[0])
-    print(urm_all.tocsc().indptr[1])
-    print(urm_all.tocsc().indices[urm_all.indptr[0]:urm_all.indptr[1]])
+    # print(urm_all.tocsc())
+    # print(urm_all.tocsc().indptr[0])
+    # print(urm_all.tocsc().indptr[1])
+    # print(urm_all.tocsc().indices[urm_all.indptr[0]:urm_all.indptr[1]])
 
     # ediff1d: the differences between consecutive elements of an array
     warm_items_mask = np.ediff1d(urm_all.tocsc().indptr) > 0
     # arange: returns the range of elements --> arange(3) = array([0, 1, 2])
     warm_items = np.arange(urm_all.shape[1])[warm_items_mask]
 
-    return warm_items, urm_all[:, warm_items]
+    return warm_items  # , urm_all[:, warm_items]
 
 
-def remove_cold_users(urm_all):
+def get_warm_users(urm_all):
 
     warm_users_mask = np.ediff1d(urm_all.tocsr().indptr) > 0
     warm_users = np.arange(urm_all.shape[0])[warm_users_mask]
 
-    return warm_users, urm_all[warm_users, :]
+    return warm_users  # , urm_all[warm_users, :]
 
 
 def single_icm_builder(single_icm_tuples):
@@ -176,6 +175,9 @@ def icm_add_missing_elements(missing_elements, dst):
 
 def train_test_holdout(urm_all, train_test_split=0.8):
 
+    print("Splitting dataset using holdout function")
+    print("train_test_split: " + str(train_test_split) + "\n")
+
     # Get the count of explicitly-stored values (non-zeros)
     num_interactions = urm_all.nnz
 
@@ -207,27 +209,33 @@ def train_test_loo(urm_all):
     items = urm_all.shape[1]
 
     urm_train = urm_all.copy()
+    urm_test = np.zeros((users, items))
 
     for user_id in range(users):
         num_interactions = urm_train[user_id].nnz
         if num_interactions > 0:
             user_profile = urm_train[user_id].indices
             item_id = np.random.choice(user_profile, 1)
-            urm_train[user_id, item_id] = 0
+            urm_train[user_id, item_id] = 0.0
+            urm_test[user_id, item_id] = 1.0
 
-    urm_test = urm_all - urm_train
-    urm_test = (sps.coo_matrix(urm_test, dtype=int, shape=urm_all.shape)).tocsr()
     urm_train = (sps.coo_matrix(urm_train, dtype=int, shape=urm_all.shape)).tocsr()
+    urm_test = (sps.coo_matrix(urm_test, dtype=int, shape=urm_all.shape)).tocsr()
 
-    print('urm_all properties')
-    print('shape =', urm_all.shape)
-    print('nnz =', urm_all.nnz)
-    print('urm_train properties')
-    print('shape =', urm_train.shape)
-    print('nnz =', urm_train.nnz)
-    print('urm_test properties')
-    print('shape =', urm_test.shape)
-    print('nnz =', urm_test.nnz)
+    urm_train.eliminate_zeros()
+    urm_test.eliminate_zeros()
+
+    # print('urm_all properties')
+    # print('shape =', urm_all.shape)
+    # print('nnz =', urm_all.nnz)
+    # print('urm_train properties')
+    # print('shape =', urm_train.shape)
+    # print('nnz =', urm_train.nnz)
+    # print('urm_test properties')
+    # print('shape =', urm_test.shape)
+    # print('nnz =', urm_test.nnz)
+
+    return urm_train, urm_test
 
 
 def create_csv(results, results_dir='../data/results'):

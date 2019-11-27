@@ -21,11 +21,13 @@ class RandomRecommender(object):
         return recommended_items
 
 
-# urm_all split with RandomRecommender not needed
 urm_train, urm_test = train_test_holdout(urm_all, 0.8)
+# urm_train, urm_test = train_test_loo(urm_all)
 
 randomRecommender = RandomRecommender()
-randomRecommender.fit(urm_all)
+randomRecommender.fit(urm_train)
+
+print(evaluate_algorithm(urm_test, randomRecommender, 10))
 
 target_list = target_list()
 results = {}
@@ -35,5 +37,3 @@ for line in target_list:
     results[line] = recommended_items
 
 # create_csv(results)
-
-print(evaluate_algorithm(urm_test, randomRecommender))

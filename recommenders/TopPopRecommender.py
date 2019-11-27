@@ -1,4 +1,5 @@
 from utils.data_handler import *
+from utils.evaluation_functions import *
 
 urm_tuples = data_csv_splitter("urm")
 urm_all = urm_all_builder(urm_tuples)
@@ -50,11 +51,13 @@ class TopPopRecommender(object):
         return recommended_items
 
 
-# urm_all split with TopPopRecommender not needed
 urm_train, urm_test = train_test_holdout(urm_all, 0.8)
+# urm_train, urm_test = train_test_loo(urm_all)
 
 topPopRecommender_removeSeen = TopPopRecommender()
-topPopRecommender_removeSeen.fit(urm_all)
+topPopRecommender_removeSeen.fit(urm_train)
+
+print(evaluate_algorithm(urm_test, topPopRecommender_removeSeen, 10))
 
 target_list = target_list()
 results = {}
@@ -63,4 +66,4 @@ for line in target_list:
     recommended_items = topPopRecommender_removeSeen.recommend(line, 10)
     results[line] = recommended_items
 
-create_csv(results)
+# create_csv(results)
