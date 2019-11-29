@@ -3,6 +3,7 @@ from datetime import datetime
 import scipy.sparse as sps
 from scipy.sparse import hstack
 import numpy as np
+from sklearn import preprocessing
 
 
 def data_csv_splitter(data_file):
@@ -47,7 +48,7 @@ def data_csv_splitter(data_file):
     return tuples
 
 
-def target_list():
+def target_users_list():
 
     target_path = "../data/data_target_users_test.csv"
     target_file = open(target_path, 'r')
@@ -86,17 +87,15 @@ def urm_all_builder(urm_tuples):
     return urm_all
 
 
+def get_warm_users(urm_all):
+
+    warm_users_mask = np.ediff1d(urm_all.tocsr().indptr) > 0
+    warm_users = np.arange(urm_all.shape[0])[warm_users_mask]
+
+    return warm_users  # , urm_all[warm_users, :]
+
+
 def get_warm_items(urm_all):
-
-    # print(urm_all)
-    # print(urm_all.indptr[0])
-    # print(urm_all.indptr[1])
-    # print(urm_all.indices[urm_all.indptr[0]:urm_all.indptr[1]])
-
-    # print(urm_all.tocsc())
-    # print(urm_all.tocsc().indptr[0])
-    # print(urm_all.tocsc().indptr[1])
-    # print(urm_all.tocsc().indices[urm_all.indptr[0]:urm_all.indptr[1]])
 
     # ediff1d: the differences between consecutive elements of an array
     warm_items_mask = np.ediff1d(urm_all.tocsc().indptr) > 0
@@ -104,14 +103,6 @@ def get_warm_items(urm_all):
     warm_items = np.arange(urm_all.shape[1])[warm_items_mask]
 
     return warm_items  # , urm_all[:, warm_items]
-
-
-def get_warm_users(urm_all):
-
-    warm_users_mask = np.ediff1d(urm_all.tocsr().indptr) > 0
-    warm_users = np.arange(urm_all.shape[0])[warm_users_mask]
-
-    return warm_users  # , urm_all[warm_users, :]
 
 
 def single_icm_builder(single_icm_tuples):
@@ -126,57 +117,48 @@ def single_icm_builder(single_icm_tuples):
     return single_icm
 
 
-def icm_all_builder(icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples):
+def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples):
 
-    # icm_sub_class_tuples already has all the items
-    r1, c1, d1 = row_col_data_lists(icm_asset_tuples)
-    r2, c2, d2 = row_col_data_lists(icm_price_tuples)
+    row_asset, column_asset, data_asset = row_col_data_lists(icm_asset_tuples)
+    row_price, column_price, data_price = row_col_data_lists(icm_price_tuples)
+    row_sub_class, column_sub_class, data_sub_class = row_col_data_lists(icm_sub_class_tuples)
 
-    r1_to_r2_elements = set(r1).difference(r2)
-    r2_to_r1_elements = set(r2).difference(r1)
+    le_asset = preprocessing.LabelEncoder()
+    le_asset.fit(data_asset)
+    data_asset = le_asset.transform(data_asset)
+    # print(data_asset[0:10])
 
-    print("Elements in ICM_asset: " + str(len(icm_asset_tuples)))
-    print("Elements in ICM_price: " + str(len(icm_price_tuples)))
-    print("Elements in ICM_sub_class: " + str(len(icm_sub_class_tuples)))
-    print("Missing values in r2 list:", r1_to_r2_elements)
-    print("Additional values in r2 list:", r2_to_r1_elements)
+    le_price = preprocessing.LabelEncoder()
+    le_price.fit(data_price)
+    data_price = le_price.transform(data_price)
+    # print(data_price[0:10])
 
-    icm_price_tuples = icm_add_missing_elements(r1_to_r2_elements, icm_price_tuples)
-    icm_asset_tuples = icm_add_missing_elements(r2_to_r1_elements, icm_asset_tuples)
+    n_items = urm_all.shape[1]
+    n_features_icm_asset = max(data_asset) + 1
+    n_features_icm_price = max(data_price) + 1
+    n_feature_icm_sub_class = max(column_sub_class) + 1
 
-    icm_asset_tuples = sorted(icm_asset_tuples)
-    icm_price_tuples = sorted(icm_price_tuples)
-    icm_sub_class_tuples = sorted(icm_sub_class_tuples)
+    icm_asset_shape = (n_items, n_features_icm_asset)
+    icm_price_shape = (n_items, n_features_icm_price)
+    icm_sub_class_shape = (n_items, n_feature_icm_sub_class)
 
-    r1, c1, d1 = row_col_data_lists(icm_asset_tuples)
-    r2, c2, d2 = row_col_data_lists(icm_price_tuples)
-    r3, c3, d3 = row_col_data_lists(icm_sub_class_tuples)
+    ones_icm_asset = np.ones(len(data_asset))
+    ones_icm_price = np.ones(len(data_price))
 
-    icm_asset = sps.coo_matrix((d1, (r1, c1)))
-    icm_asset = icm_asset.tocsr()
-    icm_price = sps.coo_matrix((d2, (r2, c2)))
-    icm_price = icm_price.tocsr()
-    icm_sub_class = sps.coo_matrix((d3, (r3, c3)))
-    icm_sub_class = icm_sub_class.tocsr()
+    icm_asset = sps.coo_matrix((ones_icm_asset, (row_asset, data_asset)), shape=icm_asset_shape)
+    icm_price = sps.coo_matrix((ones_icm_price, (row_price, data_price)), shape=icm_price_shape)
+    icm_sub_class = sps.coo_matrix((data_sub_class, (row_sub_class, column_sub_class)), shape=icm_sub_class_shape)
 
     icm_all = hstack((icm_asset, icm_price))
     icm_all = hstack((icm_all, icm_sub_class))
+    icm_all = icm_all.tocsr()
 
     return icm_all
 
 
-def icm_add_missing_elements(missing_elements, dst):
-
-    for element in missing_elements:
-        dst.append(tuple((element, 0, 0)))
-
-    return dst
-
-
 def train_test_holdout(urm_all, train_test_split=0.8):
 
-    print("Splitting dataset using holdout function")
-    print("train_test_split: " + str(train_test_split) + "\n")
+    print("train_test_split: " + str(train_test_split))
 
     # Get the count of explicitly-stored values (non-zeros)
     num_interactions = urm_all.nnz
@@ -203,8 +185,6 @@ def train_test_holdout(urm_all, train_test_split=0.8):
 
 def train_test_loo(urm_all):
 
-    print("Splitting dataset using LeaveOneOut\n")
-
     users = urm_all.shape[0]
     items = urm_all.shape[1]
 
@@ -224,16 +204,6 @@ def train_test_loo(urm_all):
 
     urm_train.eliminate_zeros()
     urm_test.eliminate_zeros()
-
-    # print('urm_all properties')
-    # print('shape =', urm_all.shape)
-    # print('nnz =', urm_all.nnz)
-    # print('urm_train properties')
-    # print('shape =', urm_train.shape)
-    # print('nnz =', urm_train.nnz)
-    # print('urm_test properties')
-    # print('shape =', urm_test.shape)
-    # print('nnz =', urm_test.nnz)
 
     return urm_train, urm_test
 

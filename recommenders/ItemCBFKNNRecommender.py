@@ -2,17 +2,19 @@ import numpy as np
 from utils.compute_similarity_python import Compute_Similarity_Python
 
 
-class ItemCFKNNRecommender(object):
+class ItemCBFKNNRecommender(object):
 
     def __init__(self):
         self.urm_all = None
+        self.icm_all = None
         self.W_sparse = None
 
-    def fit(self, urm_all, top_k=10, shrink=50.0, normalize=True, similarity="tanimoto"):
+    def fit(self, urm_all, icm_all, top_k=10, shrink=50.0, normalize=True, similarity="cosine"):
 
         self.urm_all = urm_all
+        self.icm_all = icm_all
 
-        similarity_object = Compute_Similarity_Python(self.urm_all, shrink=shrink,
+        similarity_object = Compute_Similarity_Python(self.icm_all.T, shrink=shrink,
                                                       topK=top_k, normalize=normalize,
                                                       similarity=similarity)
 
