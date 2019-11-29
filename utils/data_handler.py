@@ -4,6 +4,7 @@ import scipy.sparse as sps
 from scipy.sparse import hstack
 import numpy as np
 from sklearn import preprocessing
+from tqdm import tqdm
 
 
 def data_csv_splitter(data_file):
@@ -136,11 +137,11 @@ def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_t
     n_items = urm_all.shape[1]
     n_features_icm_asset = max(data_asset) + 1
     n_features_icm_price = max(data_price) + 1
-    n_feature_icm_sub_class = max(column_sub_class) + 1
+    n_features_icm_sub_class = max(column_sub_class) + 1
 
     icm_asset_shape = (n_items, n_features_icm_asset)
     icm_price_shape = (n_items, n_features_icm_price)
-    icm_sub_class_shape = (n_items, n_feature_icm_sub_class)
+    icm_sub_class_shape = (n_items, n_features_icm_sub_class)
 
     ones_icm_asset = np.ones(len(data_asset))
     ones_icm_price = np.ones(len(data_price))
@@ -154,6 +155,27 @@ def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_t
     icm_all = icm_all.tocsr()
 
     return icm_all
+
+
+def ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples):
+
+    row_age, column_age, data_age = row_col_data_lists(ucm_age_tuples)
+    row_region, column_region, data_region = row_col_data_lists(ucm_region_tuples)
+
+    n_users = urm_all.shape[0]
+    n_features_ucm_age = max(column_age) + 1
+    n_features_ucm_region = max(column_region) + 1
+
+    ucm_age_shape = (n_users, n_features_ucm_age)
+    ucm_region_shape = (n_users, n_features_ucm_region)
+
+    ucm_age = sps.coo_matrix((data_age, (row_age, column_age)), shape=ucm_age_shape)
+    ucm_region = sps.coo_matrix((data_region, (row_region, column_region)), shape=ucm_region_shape)
+
+    ucm_all = hstack((ucm_age, ucm_region))
+    ucm_all = ucm_all.tocsr()
+
+    return ucm_all
 
 
 def train_test_holdout(urm_all, train_test_split=0.8):
@@ -191,7 +213,7 @@ def train_test_loo(urm_all):
     urm_train = urm_all.copy()
     urm_test = np.zeros((users, items))
 
-    for user_id in range(users):
+    for user_id in tqdm(range(users)):
         num_interactions = urm_train[user_id].nnz
         if num_interactions > 0:
             user_profile = urm_train[user_id].indices

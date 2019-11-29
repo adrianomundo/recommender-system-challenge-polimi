@@ -1,6 +1,6 @@
 import argparse
-from tqdm import tqdm
 from recommenders import RandomRecommender, TopPopRecommender, ItemCBFKNNRecommender, ItemCFKNNRecommender
+from recommenders.hybrids import ItemCFKNNTopPopHybrid
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -17,6 +17,9 @@ class Runner:
         self.urm_test = None
 
         self.icm_all = None
+        self.ucm_all = None
+
+        self.warm_users = None
 
     def get_urm_all(self):
         urm_tuples = data_csv_splitter("urm")
@@ -28,6 +31,11 @@ class Runner:
         icm_sub_class_tuples = data_csv_splitter("icm_sub_class")
         self.icm_all = icm_all_builder(self.urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples)
 
+    def get_ucm_all(self):
+        ucm_age_tuples = data_csv_splitter("ucm_age")
+        ucm_region_tuples = data_csv_splitter("ucm_region")
+        self.ucm_all = ucm_all_builder(self.urm_all, ucm_age_tuples, ucm_region_tuples)
+
     def split_dataset_holdout(self):
         print("Splitting dataset using holdout function...")
         self.urm_train, self.urm_test = train_test_holdout(self.urm_all, 0.8)
@@ -35,6 +43,9 @@ class Runner:
     def split_dataset_loo(self):
         print("Splitting dataset using LeaveOneOut...")
         self.urm_train, self.urm_test = train_test_loo(self.urm_all)
+
+    def get_warm_users(self):
+        self.warm_users = get_warm_users(self.urm_all)
 
     def fit_recommender(self):
         print("Fitting model...")
@@ -45,17 +56,29 @@ class Runner:
             elif self.name == 'itemCBF':
                 self.get_icm_all()
                 self.recommender.fit(self.urm_all, self.icm_all, top_k=10, shrink=50.0)
+            elif self.name == 'userCBF':
+                self.get_ucm_all()
+
             elif self.name == 'itemCF':
                 self.recommender.fit(self.urm_all, top_k=10, shrink=50.0)
+            elif self.name == 'hybrid':
+                self.get_warm_users()
+                self.recommender.fit(self.urm_all, self.warm_users)
         else:
-            self.split_dataset_holdout()
+            self.split_dataset_loo()
             if self.name == 'random' or self.name == 'top-pop':
                 self.recommender.fit(self.urm_train)
             elif self.name == 'itemCBF':
                 self.get_icm_all()
                 self.recommender.fit(self.urm_train, self.icm_all, top_k=10, shrink=50.0)
+            elif self.name == 'userCBF':
+                self.get_ucm_all()
+
             elif self.name == 'itemCF':
                 self.recommender.fit(self.urm_train, top_k=10, shrink=50.0)
+            elif self.name == 'hybrid':
+                self.get_warm_users()
+                self.recommender.fit(self.urm_train, self.warm_users)
         print("Model fitted")
 
     def run_recommendations(self):
@@ -68,7 +91,7 @@ class Runner:
 
         if self.evaluate:
             print("Evaluating...")
-            print(evaluate_algorithm(self.urm_test, self.recommender, 10))
+            evaluate_algorithm(self.urm_test, self.recommender, 10)
 
         if self.csv:
             print("Creating CSV file...")
@@ -82,7 +105,8 @@ class Runner:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('recommender', help="recommender type (required)", choices=['random', 'top-pop',
-                                                                                    'itemCBF', 'itemCF'])
+                                                                                    'itemCBF', 'itemCF', 'userCBF',
+                                                                                    'hybrid'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
     args = parser.parse_args()
@@ -101,9 +125,16 @@ if __name__ == '__main__':
         print("itemCBF selected")
         recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
 
+    elif args.recommender == 'userCBF':
+        print("userCBF selected")
+
     elif args.recommender == 'itemCF':
         print("itemCF selected")
         recommender = ItemCFKNNRecommender.ItemCFKNNRecommender()
+
+    elif args.recommender == 'hybrid':
+        print("hybrid selected")
+        recommender = ItemCFKNNTopPopHybrid.ItemCFKNNTopPopHybrid()
 
     print(args)
     Runner(recommender, args.recommender, evaluate=args.eval, csv=args.csv).run()
