@@ -1,6 +1,7 @@
 import argparse
-from recommenders import RandomRecommender, TopPopRecommender, ItemCBFKNNRecommender, ItemCFKNNRecommender
-from recommenders.hybrids import ItemCFKNNTopPopHybrid
+from recommenders import RandomRecommender, TopPopRecommender, ItemCBFKNNRecommender, ItemCFKNNRecommender, \
+    UserCFKNNRecommender
+from recommenders.hybrids import ItemCFKNNTopPopHybrid, UserCFKNNTopPopHybrid
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -56,26 +57,24 @@ class Runner:
             elif self.name == 'itemCBF':
                 self.get_icm_all()
                 self.recommender.fit(self.urm_all, self.icm_all, top_k=10, shrink=50.0)
-            elif self.name == 'userCBF':
-                self.get_ucm_all()
-
             elif self.name == 'itemCF':
                 self.recommender.fit(self.urm_all, top_k=10, shrink=50.0)
+            elif self.name == 'userCF':
+                self.recommender.fit(self.urm_all, top_k=500, shrink=300.0)
             elif self.name == 'hybrid':
                 self.get_warm_users()
                 self.recommender.fit(self.urm_all, self.warm_users)
         else:
-            self.split_dataset_loo()
+            self.split_dataset_holdout()
             if self.name == 'random' or self.name == 'top-pop':
                 self.recommender.fit(self.urm_train)
             elif self.name == 'itemCBF':
                 self.get_icm_all()
                 self.recommender.fit(self.urm_train, self.icm_all, top_k=10, shrink=50.0)
-            elif self.name == 'userCBF':
-                self.get_ucm_all()
-
             elif self.name == 'itemCF':
                 self.recommender.fit(self.urm_train, top_k=10, shrink=50.0)
+            elif self.name == 'userCF':
+                self.recommender.fit(self.urm_train, top_k=500, shrink=300.0)
             elif self.name == 'hybrid':
                 self.get_warm_users()
                 self.recommender.fit(self.urm_train, self.warm_users)
@@ -105,7 +104,7 @@ class Runner:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('recommender', help="recommender type (required)", choices=['random', 'top-pop',
-                                                                                    'itemCBF', 'itemCF', 'userCBF',
+                                                                                    'itemCBF', 'itemCF', 'userCF',
                                                                                     'hybrid'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -125,12 +124,13 @@ if __name__ == '__main__':
         print("itemCBF selected")
         recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
 
-    elif args.recommender == 'userCBF':
-        print("userCBF selected")
-
     elif args.recommender == 'itemCF':
         print("itemCF selected")
         recommender = ItemCFKNNRecommender.ItemCFKNNRecommender()
+
+    elif args.recommender == 'userCF':
+        print("userCF selected")
+        recommender = UserCFKNNRecommender.UserCFKNNRecommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
