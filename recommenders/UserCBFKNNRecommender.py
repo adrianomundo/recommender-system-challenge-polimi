@@ -2,17 +2,19 @@ import numpy as np
 from utils.compute_similarity_python import Compute_Similarity_Python
 
 
-class UserCFKNNRecommender(object):
+class UserCBFKNNRecommender(object):
 
     def __init__(self):
         self.urm_all = None
+        self.ucm_all = None
         self.W_sparse = None
 
-    def fit(self, urm_all, top_k=600, shrink=0.0, normalize=True, similarity="cosine"):
+    def fit(self, urm_all, ucm_all, top_k=10, shrink=50.0, normalize=True, similarity="cosine"):
 
         self.urm_all = urm_all
+        self.ucm_all = ucm_all
 
-        similarity_object = Compute_Similarity_Python(self.urm_all.T, shrink=shrink,
+        similarity_object = Compute_Similarity_Python(self.ucm_all.T, shrink=shrink,
                                                       topK=top_k, normalize=normalize,
                                                       similarity=similarity)
 
