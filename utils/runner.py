@@ -1,7 +1,8 @@
 import argparse
-from recommenders import RandomRecommender, TopPopRecommender, ItemCBFKNNRecommender, ItemCFKNNRecommender, \
-    UserCFKNNRecommender, UserCBFKNNRecommender
-from recommenders.hybrids import ItemCFKNNTopPopHybrid, UserCFKNNTopPopHybrid
+from recommenders.base import RandomRecommender, TopPopRecommender
+from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
+from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
+from recommenders.hybrids import ItemCFKNNTopPopHybrid
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -65,7 +66,28 @@ class Runner:
             self.get_ucm_all()
             self.recommender.fit(matrix, self.ucm_all)
         elif self.name == 'itemCF':
-            self.recommender.fit(matrix)
+
+            top_k = [10, 50, 100, 200, 300, 400, 500]
+            shrink = [0.0, 10.0, 50.0, 100.0, 200.0, 300.0, 400.0, 500.0]
+            similarity = ["tanimoto", "tversky", "jaccard", "dice", "cosine"]
+            max_map = 0.0
+            for sim in similarity:
+                for top in top_k:
+                    for shr in shrink:
+                        print("Trying with similarity: " + str(sim) + " top_k: " + str(top) + " shrink: " + str(shr))
+                        self.recommender.fit(self.urm_train, top_k=top, shrink=shr, similarity=sim)
+                        target_users = target_users_list()
+                        results = {}
+                        print("Computing recommendations...")
+                        for user in tqdm(target_users):
+                            recommended_items = self.recommender.recommend(user, 10)
+                            results[user] = recommended_items
+                        tmp = evaluate_algorithm(self.urm_test, self.recommender, 10)
+                        if tmp > max_map:
+                            max_map = tmp
+                            print("max_map: " + str(max_map))
+
+            # self.recommender.fit(matrix)
         elif self.name == 'userCF':
             self.recommender.fit(matrix)
         elif self.name == 'hybrid':
@@ -91,7 +113,7 @@ class Runner:
 
     def run(self):
         self.fit_recommender()
-        self.run_recommendations()
+        # self.run_recommendations()
 
 
 if __name__ == '__main__':

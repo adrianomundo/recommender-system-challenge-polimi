@@ -1,4 +1,5 @@
-from recommenders import ItemCFKNNRecommender, TopPopRecommender
+from recommenders.base import TopPopRecommender
+from recommenders.CF import ItemCFKNNRecommender
 
 
 class ItemCFKNNTopPopHybrid(object):
