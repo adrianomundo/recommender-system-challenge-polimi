@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     subfolder_to_compile_list = [
         # "MatrixFactorization",
-        # "Base/Similarity",
+        "../utils/Similarity/",
         "../recommenders/SLIM_BPR",
     ]
 

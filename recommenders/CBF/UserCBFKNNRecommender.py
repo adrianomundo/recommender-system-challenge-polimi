@@ -1,5 +1,5 @@
 import numpy as np
-from utils.compute_similarity_python import Compute_Similarity_Python
+from utils.Similarity.Cython.Compute_Similarity_Cython import Compute_Similarity_Cython
 
 
 class UserCBFKNNRecommender(object):
@@ -14,7 +14,7 @@ class UserCBFKNNRecommender(object):
         self.urm_train = urm_train
         self.ucm_all = ucm_all
 
-        similarity_object = Compute_Similarity_Python(self.ucm_all.T, shrink=shrink,
+        similarity_object = Compute_Similarity_Cython(self.ucm_all.T, shrink=shrink,
                                                       topK=top_k, normalize=normalize,
                                                       similarity=similarity)
 
