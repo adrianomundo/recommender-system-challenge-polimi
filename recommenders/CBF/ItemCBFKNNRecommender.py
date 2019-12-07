@@ -5,13 +5,13 @@ from utils.compute_similarity_python import Compute_Similarity_Python
 class ItemCBFKNNRecommender(object):
 
     def __init__(self):
-        self.urm_all = None
+        self.urm_train = None
         self.icm_all = None
         self.W_sparse = None
 
-    def fit(self, urm_all, icm_all, top_k=10, shrink=50.0, normalize=True, similarity="cosine"):
+    def fit(self, urm_train, icm_all, top_k=10, shrink=50.0, normalize=True, similarity="cosine"):
 
-        self.urm_all = urm_all
+        self.urm_train = urm_train
         self.icm_all = icm_all
 
         similarity_object = Compute_Similarity_Python(self.icm_all.T, shrink=shrink,
@@ -21,11 +21,15 @@ class ItemCBFKNNRecommender(object):
         print("Computing similarity...")
         self.W_sparse = similarity_object.compute_similarity()
 
-    def recommend(self, user_id, at=10, exclude_seen=True):
+    def compute_score(self, user_id):
 
         # compute the scores using the dot product
-        user_profile = self.urm_all[user_id]
-        scores = user_profile.dot(self.W_sparse).toarray().ravel()
+        user_profile = self.urm_train[user_id]
+        return user_profile.dot(self.W_sparse).toarray().ravel()
+
+    def recommend(self, user_id, at=10, exclude_seen=True):
+
+        scores = self.compute_score(user_id)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
@@ -36,10 +40,10 @@ class ItemCBFKNNRecommender(object):
         return ranking[:at]
 
     def filter_seen(self, user_id, scores):
-        start_pos = self.urm_all.indptr[user_id]
-        end_pos = self.urm_all.indptr[user_id + 1]
+        start_pos = self.urm_train.indptr[user_id]
+        end_pos = self.urm_train.indptr[user_id + 1]
 
-        user_profile = self.urm_all.indices[start_pos:end_pos]
+        user_profile = self.urm_train.indices[start_pos:end_pos]
 
         scores[user_profile] = -np.inf
 
