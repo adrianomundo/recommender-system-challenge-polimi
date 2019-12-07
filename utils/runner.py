@@ -1,5 +1,6 @@
 import argparse
 from recommenders.SLIM_BPR import SLIM_BPR
+from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.base import RandomRecommender, TopPopRecommender
 from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
@@ -9,8 +10,8 @@ from utils.evaluation_functions import evaluate_algorithm
 
 
 class Runner:
-    def __init__(self, recommender, name, evaluate=True, csv=False):
-        self.recommender = recommender
+    def __init__(self, recommender_object, name, evaluate=True, csv=False):
+        self.recommender = recommender_object
         self.name = name
         self.evaluate = evaluate
         self.csv = csv
@@ -140,6 +141,10 @@ if __name__ == '__main__':
     elif args.recommender == 'SLIM_BPR':
         print("SLIM_BPR selected")
         recommender = SLIM_BPR.SLIM_BPR()
+
+    elif args.recommender == 'SLIM_BPR_Cython':
+        print("SLIM_BPR_Cython selected")
+        recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
