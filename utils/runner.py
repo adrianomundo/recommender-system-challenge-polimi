@@ -4,7 +4,7 @@ from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.base import RandomRecommender, TopPopRecommender
 from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
-from recommenders.hybrids import ItemCFKNNUserCFKNNHybrid
+from recommenders.hybrids import Hybrid
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -77,7 +77,8 @@ class Runner:
             self.recommender.fit(matrix)
         elif self.name == 'hybrid':
             self.get_warm_users()
-            self.recommender.fit(matrix, self.warm_users)
+            self.get_icm_all()
+            self.recommender.fit(matrix, self.warm_users, self.icm_all)
         print("Model fitted")
 
     def run_recommendations(self):
@@ -148,7 +149,7 @@ if __name__ == '__main__':
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
-        recommender = ItemCFKNNUserCFKNNHybrid.ItemCFKNNUserCFKNNHybrid()
+        recommender = Hybrid.Hybrid()
 
     print(args)
     Runner(recommender, args.recommender, evaluate=args.eval, csv=args.csv).run()

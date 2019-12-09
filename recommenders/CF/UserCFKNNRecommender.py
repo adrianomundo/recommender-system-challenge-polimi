@@ -8,7 +8,7 @@ class UserCFKNNRecommender(object):
         self.urm_train = None
         self.W_sparse = None
 
-    def fit(self, urm_train, top_k=600, shrink=0.0, normalize=True, similarity="cosine"):
+    def fit(self, urm_train, top_k=590, shrink=0.0, normalize=True, similarity="cosine"):
 
         self.urm_train = urm_train
 

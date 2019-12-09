@@ -181,6 +181,8 @@ def ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples):
 
 def train_test_holdout(urm_all, train_test_split=0.8):
 
+    np.random.seed(123)
+
     print("train_test_split: " + str(train_test_split))
 
     # Get the count of explicitly-stored values (non-zeros)
