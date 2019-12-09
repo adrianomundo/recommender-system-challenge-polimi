@@ -3,6 +3,7 @@ import scipy.sparse as sps
 import time
 import sys
 from sklearn.linear_model import ElasticNet
+from recommenders.base import TopPopRecommender
 
 
 class SLIMElasticNet(object):
@@ -16,17 +17,21 @@ class SLIMElasticNet(object):
         self.top_k = top_k
 
         self.model = None
-        self.l1_ratio = 0
+        self.l1_ratio = None
         self.W_sparse = None
+        self.warm_users = None
 
-    def fit(self, urm_train):
+        self.top_recommender = TopPopRecommender.TopPopRecommender()
+
+    def fit(self, urm_train, warm_users):
 
         self.urm_train = urm_train
+        self.warm_users = warm_users
 
-        ##if self.l1_penalty + self.l2_penalty != 0:
-        ##    self.l1_ratio = self.l1_penalty / (self.l1_penalty + self.l2_penalty)
-        ##else:
-        ##    print("SLIM_ElasticNet: l1_penalty+l2_penalty cannot be equal to zero, setting the ratio l1/(l1+l2) to 1.0")
+        if self.l1_penalty + self.l2_penalty != 0:
+            self.l1_ratio = self.l1_penalty / (self.l1_penalty + self.l2_penalty)
+        else:
+            print("SLIM_ElasticNet: l1_penalty+l2_penalty cannot be equal to zero, setting the ratio l1/(l1+l2) to 1.0")
         self.l1_ratio = 1.0
 
         # initialize the ElasticNet model
@@ -118,7 +123,7 @@ class SLIMElasticNet(object):
                 start_time_printBatch = time.time()
 
         # generate the sparse weight matrix
-        self.W_sparse = sps.csr_matrix((values[:numCells], (rows[:numCells], cols[:numCells])),
+        self.W_sparse = sps.csr_matrix((values[:num_cells], (rows[:num_cells], cols[:num_cells])),
                                        shape=(n_items, n_items), dtype=np.float32)
 
     def compute_score(self, user_id):
@@ -128,13 +133,20 @@ class SLIMElasticNet(object):
         return user_profile.dot(self.W_sparse).toarray().ravel()
 
     def recommend(self, user_id, at=10, exclude_seen=True):
-        scores = self.compute_score(user_id)
 
-        if exclude_seen:
-            scores = self.filter_seen(user_id, scores)
+        if user_id in self.warm_users:
+            scores = self.compute_score(user_id)
 
-        ranking = scores.argsort()[::-1]
-        return ranking[:at]
+            if exclude_seen:
+                scores = self.filter_seen(user_id, scores)
+
+            # rank items
+            ranking = scores.argsort()[::-1]
+
+            return ranking[:at]
+        else:
+            return self.top_recommender.recommend(user_id, at)
+
 
     def filter_seen(self, user_id, scores):
 

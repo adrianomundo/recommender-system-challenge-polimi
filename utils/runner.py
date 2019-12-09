@@ -77,7 +77,8 @@ class Runner:
         elif self.name == 'SLIM_BPR_Cython':
             self.recommender.fit(matrix)
         elif self.name == 'SLIM_ElasticNet':
-            self.recommender.fit(matrix)
+            self.get_warm_users()
+            self.recommender.fit(matrix, self.warm_users)
         elif self.name == 'hybrid':
             self.get_warm_users()
             self.get_icm_all()
