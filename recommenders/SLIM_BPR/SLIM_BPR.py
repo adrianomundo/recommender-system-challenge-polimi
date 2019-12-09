@@ -158,15 +158,12 @@ class SLIM_BPR(object):
         return user_profile.dot(self.W).toarray().ravel()
 
     def recommend(self, user_id, at=10, exclude_seen=True):
-
         scores = self.compute_score(user_id)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
 
-        # rank items
         ranking = scores.argsort()[::-1]
-
         return ranking[:at]
 
     def filter_seen(self, user_id, scores):

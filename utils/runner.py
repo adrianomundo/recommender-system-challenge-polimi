@@ -1,4 +1,5 @@
 import argparse
+from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from recommenders.SLIM_BPR import SLIM_BPR
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.base import RandomRecommender, TopPopRecommender
@@ -75,6 +76,8 @@ class Runner:
             self.recommender.fit(matrix)
         elif self.name == 'SLIM_BPR_Cython':
             self.recommender.fit(matrix)
+        elif self.name == 'SLIM_ElasticNet':
+            self.recommender.fit(matrix)
         elif self.name == 'hybrid':
             self.get_warm_users()
             self.get_icm_all()
@@ -108,6 +111,7 @@ if __name__ == '__main__':
                                                                                     'itemCBF', 'userCBF',
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
+                                                                                    'SLIM_ElasticNet',
                                                                                     'hybrid'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -146,6 +150,10 @@ if __name__ == '__main__':
     elif args.recommender == 'SLIM_BPR_Cython':
         print("SLIM_BPR_Cython selected")
         recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
+
+    elif args.recommender == 'SLIM_ElasticNet':
+        print("SLIM_ElasticNet selected")
+        recommender = SLIM_ElasticNet.SLIMElasticNet()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
