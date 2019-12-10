@@ -2,6 +2,7 @@ import sys
 import time
 
 import numpy as np
+import scipy.sparse as sps
 from scipy.special import expit
 
 from utils.data_handler import similarityMatrixTopK
@@ -86,6 +87,8 @@ class SLIM_BPR(object):
 
         del self.S
 
+        sps.save_npz("../tmp/SLIM_BPR_matrix.npz", self.W)
+
     def epoch_iteration(self):
 
         # Get number of available interactions
@@ -151,7 +154,11 @@ class SLIM_BPR(object):
 
         return user_id, pos_item_id, neg_item_id
 
-    def compute_score(self, user_id):
+    def compute_score(self, user_id, urm_train=None, load_matrix=True):
+
+        if load_matrix:
+            self.urm_train = urm_train
+            self.W = sps.load_npz("../tmp/SLIM_BPR_matrix.npz")
 
         # compute the scores using the dot product
         user_profile = self.urm_train[user_id]

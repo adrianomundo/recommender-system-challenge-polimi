@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as sps
 from utils.Similarity.Cython.Compute_Similarity_Cython import Compute_Similarity_Cython
 
 
@@ -16,10 +17,16 @@ class UserCFKNNRecommender(object):
                                                       topK=top_k, normalize=normalize,
                                                       similarity=similarity)
 
-        print("Computing similarity...")
+        print("Computing userCF similarity...")
         self.W_sparse = similarity_object.compute_similarity()
 
-    def compute_score(self, user_id):
+        sps.save_npz("../tmp/userCF_matrix.npz", self.W_sparse)
+
+    def compute_score(self, user_id, urm_train=None, load_matrix=True):
+
+        if load_matrix:
+            self.urm_train = urm_train
+            self.W_sparse = sps.load_npz("../tmp/userCF_matrix.npz")
 
         # compute the scores using the dot product
         return self.W_sparse[user_id, :].dot(self.urm_train).toarray().ravel()

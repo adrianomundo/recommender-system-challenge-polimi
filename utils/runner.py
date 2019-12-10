@@ -77,8 +77,7 @@ class Runner:
         elif self.name == 'SLIM_BPR_Cython':
             self.recommender.fit(matrix)
         elif self.name == 'SLIM_ElasticNet':
-            self.get_warm_users()
-            self.recommender.fit(matrix, self.warm_users)
+            self.recommender.fit(matrix)
         elif self.name == 'hybrid':
             self.get_warm_users()
             self.get_icm_all()
@@ -86,20 +85,20 @@ class Runner:
         print("Model fitted")
 
     def run_recommendations(self):
-        target_users = target_users_list()
-        results = {}
-        print("Computing recommendations...")
-        for user in tqdm(target_users):
-            recommended_items = self.recommender.recommend(user)
-            results[user] = recommended_items
-
         if self.evaluate:
             print("Evaluating...")
             evaluate_algorithm(self.urm_test, self.recommender)
 
         if self.csv:
+            target_users = target_users_list()
+            results = {}
+            print("Computing recommendations...")
+            for user in tqdm(target_users):
+                recommended_items = self.recommender.recommend(user)
+                results[user] = recommended_items
             print("Creating CSV file...")
             create_csv(results)
+            print("CSV file created")
 
     def run(self):
         self.fit_recommender()
@@ -154,7 +153,7 @@ if __name__ == '__main__':
 
     elif args.recommender == 'SLIM_ElasticNet':
         print("SLIM_ElasticNet selected")
-        recommender = SLIM_ElasticNet.SLIMElasticNet()
+        recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")

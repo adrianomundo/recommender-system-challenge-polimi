@@ -1,6 +1,7 @@
 import sys
 
 import numpy as np
+import scipy.sparse as sps
 
 from utils.CythonCompiler.run_compile_subprocess import run_compile_subprocess
 from utils.data_handler import similarityMatrixTopK, check_matrix
@@ -118,6 +119,8 @@ class SLIM_BPR_Cython(object):
             current_epoch += 1
 
         self.get_S_incremental_and_set_W()
+        sps.save_npz("../tmp/SLIM_BPR_Cython_matrix.npz", self.W_sparse)
+
         self.cython_epoch._dealloc()
 
         sys.stdout.flush()
@@ -143,7 +146,11 @@ class SLIM_BPR_Cython(object):
             self.W_sparse = similarityMatrixTopK(self.S_incremental, k=self.top_k)
             self.W_sparse = check_matrix(self.W_sparse, format='csr')
 
-    def compute_score(self, user_id):
+    def compute_score(self, user_id, urm_train=None, load_matrix=True):
+
+        if load_matrix:
+            self.urm_train = urm_train
+            self.W_sparse = sps.load_npz("../tmp/SLIM_BPR_Cython_matrix.npz")
 
         # compute the scores using the dot product
         user_profile = self.urm_train[user_id]
