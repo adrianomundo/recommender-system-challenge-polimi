@@ -51,79 +51,86 @@ class SLIM_BPR_Cython(object):
             train_with_sparse_weights=False,
             symmetric=True,
             batch_size=1, lambda_i=0.0, lambda_j=0.0, learning_rate=0.01, top_k=200,
-            sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999):
+            sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
+            load_matrix=True):
 
         self.urm_train = urm_train
-        self.n_users = self.urm_train.shape[0]
-        self.n_items = self.urm_train.shape[1]
 
-        self.epochs = epochs
-        self.positive_threshold = positive_threshold
-        self.train_with_sparse_weights = train_with_sparse_weights
-        self.symmetric = symmetric
-        self.batch_size = batch_size
-        self.lambda_i = lambda_i
-        self.lambda_j = lambda_j
-        self.learning_rate = learning_rate
-        self.top_k = top_k
-        self.sgd_mode = sgd_mode
-        self.gamma = gamma
-        self.beta_1 = beta_1
-        self.beta_2 = beta_2
+        if not load_matrix:
+            self.n_users = self.urm_train.shape[0]
+            self.n_items = self.urm_train.shape[1]
 
-        # Select only positive interactions
-        urm_train_positive = self.urm_train.copy()
+            self.epochs = epochs
+            self.positive_threshold = positive_threshold
+            self.train_with_sparse_weights = train_with_sparse_weights
+            self.symmetric = symmetric
+            self.batch_size = batch_size
+            self.lambda_i = lambda_i
+            self.lambda_j = lambda_j
+            self.learning_rate = learning_rate
+            self.top_k = top_k
+            self.sgd_mode = sgd_mode
+            self.gamma = gamma
+            self.beta_1 = beta_1
+            self.beta_2 = beta_2
 
-        if self.positive_threshold is not None:
-            urm_train_positive.data = urm_train_positive.data >= self.positive_threshold
-            urm_train_positive.eliminate_zeros()
+            # Select only positive interactions
+            urm_train_positive = self.urm_train.copy()
 
-            assert urm_train_positive.nnz > 0, "SLIM_BPR_Cython: urm_train_positive is empty," \
-                                               " positive threshold is too high"
+            if self.positive_threshold is not None:
+                urm_train_positive.data = urm_train_positive.data >= self.positive_threshold
+                urm_train_positive.eliminate_zeros()
 
-        if not self.train_with_sparse_weights:
+                assert urm_train_positive.nnz > 0, "SLIM_BPR_Cython: urm_train_positive is empty," \
+                                                   " positive threshold is too high"
 
-            n_items = self.urm_train.shape[1]
-            required_gb = 8 * n_items ** 2 / 1e+06
+            if not self.train_with_sparse_weights:
 
-            if self.symmetric:
-                required_gb /= 2
+                n_items = self.urm_train.shape[1]
+                required_gb = 8 * n_items ** 2 / 1e+06
 
-            print("SLIM_BPR_Cython: Estimated memory required for similarity matrix of {} items is "
-                  "{:.2f} MB".format(n_items, required_gb))
+                if self.symmetric:
+                    required_gb /= 2
 
-        # Import compiled module
-        from recommenders.SLIM_BPR.Cython.SLIM_BPR_Cython_Epoch import SLIM_BPR_Cython_Epoch
+                print("SLIM_BPR_Cython: Estimated memory required for similarity matrix of {} items is "
+                      "{:.2f} MB".format(n_items, required_gb))
 
-        self.cython_epoch = SLIM_BPR_Cython_Epoch(urm_train_positive,
-                                                  train_with_sparse_weights=self.train_with_sparse_weights,
-                                                  final_model_sparse_weights=True,
-                                                  topK=self.top_k,
-                                                  learning_rate=self.learning_rate,
-                                                  li_reg=self.lambda_i,
-                                                  lj_reg=self.lambda_j,
-                                                  batch_size=self.batch_size,
-                                                  symmetric=self.symmetric,
-                                                  sgd_mode=self.sgd_mode,
-                                                  verbose=self.verbose,
-                                                  gamma=self.gamma,
-                                                  beta_1=self.beta_1,
-                                                  beta_2=self.beta_2)
+            # Import compiled module
+            from recommenders.SLIM_BPR.Cython.SLIM_BPR_Cython_Epoch import SLIM_BPR_Cython_Epoch
 
-        self._initialize_incremental_model()
-        current_epoch = 0
+            self.cython_epoch = SLIM_BPR_Cython_Epoch(urm_train_positive,
+                                                      train_with_sparse_weights=self.train_with_sparse_weights,
+                                                      final_model_sparse_weights=True,
+                                                      topK=self.top_k,
+                                                      learning_rate=self.learning_rate,
+                                                      li_reg=self.lambda_i,
+                                                      lj_reg=self.lambda_j,
+                                                      batch_size=self.batch_size,
+                                                      symmetric=self.symmetric,
+                                                      sgd_mode=self.sgd_mode,
+                                                      verbose=self.verbose,
+                                                      gamma=self.gamma,
+                                                      beta_1=self.beta_1,
+                                                      beta_2=self.beta_2)
 
-        while current_epoch < self.epochs:
-            self._run_epoch()
-            self._update_best_model()
-            current_epoch += 1
+            self._initialize_incremental_model()
+            current_epoch = 0
 
-        self.get_S_incremental_and_set_W()
-        sps.save_npz("../tmp/SLIM_BPR_Cython_matrix.npz", self.W_sparse)
+            while current_epoch < self.epochs:
+                self._run_epoch()
+                self._update_best_model()
+                current_epoch += 1
 
-        self.cython_epoch._dealloc()
+            self.get_S_incremental_and_set_W()
+            sps.save_npz("../tmp/SLIM_BPR_Cython_matrix.npz", self.W_sparse)
 
-        sys.stdout.flush()
+            self.cython_epoch._dealloc()
+
+            sys.stdout.flush()
+        else:
+            print("Loading SLIM_BPR_Cython_matrix.npz file...")
+            self.W_sparse = sps.load_npz("../tmp/SLIM_BPR_Cython_matrix.npz")
+            print("Matrix loaded!")
 
     def _initialize_incremental_model(self):
         self.S_incremental = self.cython_epoch.get_S()
@@ -146,11 +153,7 @@ class SLIM_BPR_Cython(object):
             self.W_sparse = similarityMatrixTopK(self.S_incremental, k=self.top_k)
             self.W_sparse = check_matrix(self.W_sparse, format='csr')
 
-    def compute_score(self, user_id, urm_train=None, load_matrix=True):
-
-        if load_matrix:
-            self.urm_train = urm_train
-            self.W_sparse = sps.load_npz("../tmp/SLIM_BPR_Cython_matrix.npz")
+    def compute_score(self, user_id):
 
         # compute the scores using the dot product
         user_profile = self.urm_train[user_id]

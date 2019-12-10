@@ -10,25 +10,25 @@ class UserCBFKNNRecommender(object):
         self.ucm_all = None
         self.W_sparse = None
 
-    def fit(self, urm_train, ucm_all, top_k=800, shrink=5.0, normalize=True, similarity="cosine"):
+    def fit(self, urm_train, ucm_all, top_k=800, shrink=5.0, normalize=True, similarity="cosine", load_matrix=True):
 
         self.urm_train = urm_train
-        self.ucm_all = ucm_all
 
-        similarity_object = Compute_Similarity_Cython(self.ucm_all.T, shrink=shrink,
-                                                      topK=top_k, normalize=normalize,
-                                                      similarity=similarity)
+        if not load_matrix:
+            print("Computing userCBF similarity...")
+            self.ucm_all = ucm_all
+            similarity_object = Compute_Similarity_Cython(self.ucm_all.T, shrink=shrink,
+                                                          topK=top_k, normalize=normalize,
+                                                          similarity=similarity)
 
-        print("Computing userCBF similarity...")
-        self.W_sparse = similarity_object.compute_similarity()
-
-        sps.save_npz("../tmp/userCBF_matrix.npz", self.W_sparse)
-
-    def compute_score(self, user_id, urm_train=None, load_matrix=True):
-
-        if load_matrix:
-            self.urm_train = urm_train
+            self.W_sparse = similarity_object.compute_similarity()
+            sps.save_npz("../tmp/userCBF_matrix.npz", self.W_sparse)
+        else:
+            print("Loading userCBF_matrix.npz file...")
             self.W_sparse = sps.load_npz("../tmp/userCBF_matrix.npz")
+            print("Matrix loaded!")
+
+    def compute_score(self, user_id):
 
         # compute the scores using the dot product
         return self.W_sparse[user_id, :].dot(self.urm_train).toarray().ravel()

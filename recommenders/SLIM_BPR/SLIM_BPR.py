@@ -53,41 +53,47 @@ class SLIM_BPR(object):
                 update = - logistic_function - self.lambda_j * self.S[neg_item_id, userSeenItem]
                 self.S[neg_item_id, userSeenItem] += self.learning_rate * update
 
-    def fit(self, urm_train, epochs=1):
+    def fit(self, urm_train, epochs=1, load_matrix=False):
         """
         Train SLIM wit BPR. If the model was already trained, overwrites matrix S
         :param urm_train:
         :param epochs:
+        :param load_matrix:
         :return: -
         """
 
         self.urm_train = urm_train
-        self.n_users = urm_train.shape[0]
-        self.n_items = urm_train.shape[1]
 
-        # Initialize similarity with random values and zero-out diagonal
-        self.S = np.random.random((self.n_items, self.n_items)).astype('float32')
-        self.S[np.arange(self.n_items), np.arange(self.n_items)] = 0
+        if not load_matrix:
+            self.n_users = urm_train.shape[0]
+            self.n_items = urm_train.shape[1]
 
-        start_time_train = time.time()
+            # Initialize similarity with random values and zero-out diagonal
+            self.S = np.random.random((self.n_items, self.n_items)).astype('float32')
+            self.S[np.arange(self.n_items), np.arange(self.n_items)] = 0
 
-        for currentEpoch in range(epochs):
-            start_time_epoch = time.time()
+            start_time_train = time.time()
 
-            self.epoch_iteration()
-            print("Epoch {} of {} complete in {:.2f} minutes".format(currentEpoch + 1, epochs,
-                                                                     float(time.time() - start_time_epoch) / 60))
+            for currentEpoch in range(epochs):
+                start_time_epoch = time.time()
 
-        print("Train completed in {:.2f} minutes".format(float(time.time() - start_time_train) / 60))
+                self.epoch_iteration()
+                print("Epoch {} of {} complete in {:.2f} minutes".format(currentEpoch + 1, epochs,
+                                                                         float(time.time() - start_time_epoch) / 60))
 
-        # The similarity matrix is learnt row-wise
-        # To be used in the product URM*S must be transposed to be column-wise
-        self.W = self.S.T
-        self.W = similarityMatrixTopK(self.W, k=100)
+            print("Train completed in {:.2f} minutes".format(float(time.time() - start_time_train) / 60))
 
-        del self.S
+            # The similarity matrix is learnt row-wise
+            # To be used in the product URM*S must be transposed to be column-wise
+            self.W = self.S.T
+            self.W = similarityMatrixTopK(self.W, k=100)
+            sps.save_npz("../tmp/SLIM_BPR_matrix.npz", self.W)
 
-        sps.save_npz("../tmp/SLIM_BPR_matrix.npz", self.W)
+            del self.S
+        else:
+            print("Loading SLIM_BPR_matrix.npz file...")
+            self.W = sps.load_npz("../tmp/SLIM_BPR_matrix.npz")
+            print("Matrix loaded!")
 
     def epoch_iteration(self):
 
@@ -154,11 +160,7 @@ class SLIM_BPR(object):
 
         return user_id, pos_item_id, neg_item_id
 
-    def compute_score(self, user_id, urm_train=None, load_matrix=True):
-
-        if load_matrix:
-            self.urm_train = urm_train
-            self.W = sps.load_npz("../tmp/SLIM_BPR_matrix.npz")
+    def compute_score(self, user_id):
 
         # compute the scores using the dot product
         user_profile = self.urm_train[user_id]

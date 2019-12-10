@@ -12,10 +12,15 @@ def run(item_cf_weight, slim_weight, item_cbf_weight, user_cf_weight, elastic_we
 
     urm_train, urm_test = train_test_holdout(urm_all, 0.8)
 
+    icm_asset_tuples = data_csv_splitter("icm_asset")
+    icm_price_tuples = data_csv_splitter("icm_price")
+    icm_sub_class_tuples = data_csv_splitter("icm_sub_class")
+    icm_all = icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples)
+
     warm_users = get_warm_users(urm_all)
 
-    recommender = Hybrid.Hybrid(warm_users, urm_train, item_cf_weight, slim_weight, item_cbf_weight,
-                                user_cf_weight, elastic_weight)
+    recommender = Hybrid.Hybrid(item_cf_weight, slim_weight, item_cbf_weight, user_cf_weight, elastic_weight)
+    recommender.fit(urm_train, warm_users, icm_all)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 
