@@ -2,12 +2,10 @@ import numpy as np
 import scipy.sparse as sps
 from tqdm import tqdm
 
+
 # relevant items: items in the test set
 # precision: how many of the recommended items are relevant
-
-
 def precision(is_relevant, relevant_items):
-
     # is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
 
     precision_score = np.sum(is_relevant, dtype=np.float32) / len(is_relevant)
@@ -17,7 +15,6 @@ def precision(is_relevant, relevant_items):
 
 # recall: how many of the relevant items I was able to recommend
 def recall(is_relevant, relevant_items):
-
     # is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
 
     recall_score = np.sum(is_relevant, dtype=np.float32) / relevant_items.shape[0]
@@ -26,7 +23,6 @@ def recall(is_relevant, relevant_items):
 
 
 def MAP(is_relevant, relevant_items):
-
     # is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
 
     # Cumulative sum: precision at 1, at 2, at 3 ...
@@ -38,7 +34,6 @@ def MAP(is_relevant, relevant_items):
 
 
 def evaluate_algorithm(urm_test, recommender_object, at=10):
-
     cumulative_precision = 0.0
     cumulative_recall = 0.0
     cumulative_map = 0.0
@@ -57,8 +52,7 @@ def evaluate_algorithm(urm_test, recommender_object, at=10):
         start_pos = urm_test.indptr[user_id]
         end_pos = urm_test.indptr[user_id + 1]
 
-        if end_pos-start_pos > 0:
-
+        if end_pos - start_pos > 0:
             relevant_items = urm_test.indices[start_pos:end_pos]
 
             recommended_items = recommender_object.recommend(user_id, at=at)

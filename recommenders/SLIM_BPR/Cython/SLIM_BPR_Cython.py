@@ -52,7 +52,7 @@ class SLIM_BPR_Cython(object):
             symmetric=True,
             batch_size=1, lambda_i=0.0, lambda_j=0.0, learning_rate=0.01, top_k=200,
             sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
-            load_matrix=True):
+            load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -122,14 +122,14 @@ class SLIM_BPR_Cython(object):
                 current_epoch += 1
 
             self.get_S_incremental_and_set_W()
-            sps.save_npz("../tmp/SLIM_BPR_Cython_matrix.npz", self.W_sparse)
+            sps.save_npz("../tmp/SLIM_BPR_Cython_similarity_matrix.npz", self.W_sparse)
 
             self.cython_epoch._dealloc()
 
             sys.stdout.flush()
         else:
-            print("Loading SLIM_BPR_Cython_matrix.npz file...")
-            self.W_sparse = sps.load_npz("../tmp/SLIM_BPR_Cython_matrix.npz")
+            print("Loading SLIM_BPR_Cython_similarity_matrix.npz file...")
+            self.W_sparse = sps.load_npz("../tmp/SLIM_BPR_Cython_similarity_matrix.npz")
             print("Matrix loaded!")
 
     def _initialize_incremental_model(self):

@@ -87,12 +87,12 @@ class SLIM_BPR(object):
             # To be used in the product URM*S must be transposed to be column-wise
             self.W = self.S.T
             self.W = similarityMatrixTopK(self.W, k=100)
-            sps.save_npz("../tmp/SLIM_BPR_matrix.npz", self.W)
+            sps.save_npz("../tmp/SLIM_BPR_similarity_matrix.npz", self.W)
 
             del self.S
         else:
-            print("Loading SLIM_BPR_matrix.npz file...")
-            self.W = sps.load_npz("../tmp/SLIM_BPR_matrix.npz")
+            print("Loading SLIM_BPR_similarity_matrix.npz file...")
+            self.W = sps.load_npz("../tmp/SLIM_BPR_similarity_matrix.npz")
             print("Matrix loaded!")
 
     def epoch_iteration(self):
