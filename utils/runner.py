@@ -1,4 +1,6 @@
 import argparse
+
+from recommenders.GraphBased import RP3betaRecommender
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from recommenders.SLIM_BPR import SLIM_BPR
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
@@ -78,9 +80,12 @@ class Runner:
             self.recommender.fit(matrix)
         elif self.name == 'SLIM_ElasticNet':
             self.recommender.fit(matrix)
+        elif self.name == 'RP3beta':
+            self.recommender.fit(matrix)
         elif self.name == 'hybrid':
             self.get_warm_users()
             self.get_icm_all()
+            self.get_ucm_all()
             self.recommender.fit(matrix, self.warm_users, self.icm_all)
         print("Model fitted")
 
@@ -111,7 +116,7 @@ if __name__ == '__main__':
                                                                                     'itemCBF', 'userCBF',
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
-                                                                                    'SLIM_ElasticNet',
+                                                                                    'SLIM_ElasticNet', 'RP3beta',
                                                                                     'hybrid'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -154,6 +159,10 @@ if __name__ == '__main__':
     elif args.recommender == 'SLIM_ElasticNet':
         print("SLIM_ElasticNet selected")
         recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
+
+    elif args.recommender == 'RP3beta':
+        print("RP3beta selected")
+        recommender = RP3betaRecommender.RP3betaRecommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")

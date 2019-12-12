@@ -15,7 +15,7 @@ class SLIMElasticNetRecommender(object):
 
         self.urm_train = None
 
-    def fit(self, urm_train, l1_ratio=0.1, positive_only=True, topK=100, load_matrix=False):
+    def fit(self, urm_train, l1_ratio=0.1, positive_only=True, topK=100, load_matrix=True):
 
         self.urm_train = urm_train
 

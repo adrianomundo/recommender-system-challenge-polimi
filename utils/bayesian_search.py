@@ -5,7 +5,7 @@ from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
 
-def run(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight):
+def run(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight, rp3):
 
     urm_tuples = data_csv_splitter("urm")
     urm_all = urm_all_builder(urm_tuples)
@@ -19,16 +19,16 @@ def run(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight):
 
     warm_users = get_warm_users(urm_all)
 
-    recommender = Hybrid.Hybrid(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight)
-    recommender.fit(urm_train, warm_users, icm_all)
+    recommender = Hybrid.Hybrid(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight, rp3)
+    recommender.fit(urm_train, warm_users, icm_all, )
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'item_cf_weight': (1, 1.7), 'item_cbf_weight': (1, 3.5),
-               'user_cf_weight': (0, 0.03), 'elastic_weight': (0.2, 0.6)}
+    pbounds = {'item_cf_weight': (1.1, 1.5), 'item_cbf_weight': (2, 2.5),
+               'user_cf_weight': (0, 0.04), 'elastic_weight': (0.3, 0.5), 'rp3': (1, 2)}
 
     optimizer = BayesianOptimization(
         f=run,
@@ -38,8 +38,9 @@ if __name__ == '__main__':
     )
 
     optimizer.maximize(
-        init_points=50,  # random steps
-        n_iter=100,
+        init_points=15,  # random steps
+        n_iter=35,
+        xi=0.1
     )
 
     print(optimizer.max)

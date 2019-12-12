@@ -9,7 +9,7 @@ class ItemCFKNNRecommender(object):
         self.urm_train = None
         self.W_sparse = None
 
-    def fit(self, urm_train, top_k=10, shrink=30.0, normalize=True, similarity="jaccard", load_matrix=False):
+    def fit(self, urm_train, top_k=10, shrink=30.0, normalize=True, similarity="jaccard", load_matrix=True):
 
         self.urm_train = urm_train
 
