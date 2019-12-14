@@ -62,7 +62,9 @@ class Runner:
             matrix = self.urm_train
         else:
             matrix = self.urm_all
-        if self.name == 'random' or self.name == 'top-pop':
+        if self.name == 'random':
+            self.recommender.fit(matrix)
+        elif self.name == 'top-pop':
             self.recommender.fit(matrix)
         elif self.name == 'itemCBF':
             self.get_icm_all()
@@ -86,7 +88,7 @@ class Runner:
             self.get_warm_users()
             self.get_icm_all()
             self.get_ucm_all()
-            self.recommender.fit(matrix, self.warm_users, self.icm_all)
+            self.recommender.fit(matrix, self.warm_users, self.icm_all, self.ucm_all)
         print("Model fitted")
 
     def run_recommendations(self):
