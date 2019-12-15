@@ -19,16 +19,20 @@ def run(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight, rp3):
 
     warm_users = get_warm_users(urm_all)
 
+    ucm_age_tuples = data_csv_splitter("ucm_age")
+    ucm_region_tuples = data_csv_splitter("ucm_region")
+    ucm_all = ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples)
+
     recommender = Hybrid.Hybrid(item_cf_weight, item_cbf_weight, user_cf_weight, elastic_weight, rp3)
-    recommender.fit(urm_train, warm_users, icm_all, )
+    recommender.fit(urm_train, warm_users, icm_all, ucm_all)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'item_cf_weight': (1.1, 1.5), 'item_cbf_weight': (2, 2.5),
-               'user_cf_weight': (0, 0.04), 'elastic_weight': (0.3, 0.5), 'rp3': (1, 2)}
+    pbounds = {'item_cf_weight': (0, 2), 'item_cbf_weight': (0, 2),
+               'user_cf_weight': (0, 0.1), 'elastic_weight': (0, 1), 'rp3': (2, 3)}
 
     optimizer = BayesianOptimization(
         f=run,
@@ -38,9 +42,8 @@ if __name__ == '__main__':
     )
 
     optimizer.maximize(
-        init_points=15,  # random steps
-        n_iter=35,
-        xi=0.1
+        init_points=20,  # random steps
+        n_iter=80,
     )
 
     print(optimizer.max)

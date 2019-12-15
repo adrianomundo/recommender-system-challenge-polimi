@@ -10,22 +10,23 @@ from recommenders.base import TopPopRecommender
 
 class Hybrid(object):
 
-    def __init__(self, item_cf_weight=1.054, item_cbf_weight=1.009, user_cf_weight=0.006088, rp3_weight=2.478):
+    def __init__(self, item_cf_weight=1.271, item_cbf_weight=2.238, user_cf_weight=0.03937,
+                 elastic_weight=0.3029, rp3_weight=1.271):
 
         self.item_cf_weight = item_cf_weight
         # self.slim_weight = slim_weight
         self.item_cbf_weight = item_cbf_weight
         self.user_cf_weight = user_cf_weight
         # self.user_cbf_weight = user_cbf_weight
-        # self.elastic_weight = elastic_weight
+        self.elastic_weight = elastic_weight
         self.rp3_weight = rp3_weight
         self.item_cf_recommender = ItemCFKNNRecommender.ItemCFKNNRecommender()
         # self.slim_recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
         self.item_cbf_recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
         self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
-        # self.elastic_recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
+        self.elastic_recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
         self.rp3_recommender = RP3betaRecommender.RP3betaRecommender()
-        self.top_recommender = TopPopRecommender.TopPopRecommender()
+        # self.top_recommender = TopPopRecommender.TopPopRecommender()
         self.user_cbf_recommender = UserCBFKNNRecommender.UserCBFKNNRecommender()
         self.urm_train = None
         self.warm_users = None
@@ -34,14 +35,14 @@ class Hybrid(object):
 
         self.urm_train = urm_train
         self.warm_users = warm_users
-        self.item_cf_recommender.fit(urm_train)
-        self.item_cbf_recommender.fit(urm_train, icm_all)
-        self.user_cf_recommender.fit(urm_train)
+        self.item_cf_recommender.fit(urm_train, load_matrix=True)
+        self.item_cbf_recommender.fit(urm_train, icm_all, load_matrix=True)
+        self.user_cf_recommender.fit(urm_train, load_matrix=True)
         # self.slim_recommender.fit(urm_train)
-        # self.elastic_recommender.fit(urm_train)
-        self.rp3_recommender.fit(urm_train)
-        self.top_recommender.fit(urm_train)
-        self.user_cbf_recommender.fit(urm_train, ucm_all)
+        self.elastic_recommender.fit(urm_train, load_matrix=True)
+        self.rp3_recommender.fit(urm_train, load_matrix=True)
+        # self.top_recommender.fit(urm_train)
+        self.user_cbf_recommender.fit(urm_train, ucm_all, load_matrix=True)
 
     def compute_score(self, user_id):
 
@@ -49,7 +50,7 @@ class Hybrid(object):
         # item_weights_2 = self.slim_recommender.compute_score(user_id)
         item_weights_3 = self.item_cbf_recommender.compute_score(user_id)
         item_weights_4 = self.user_cf_recommender.compute_score(user_id)
-        # item_weights_5 = self.elastic_recommender.compute_score(user_id)
+        item_weights_5 = self.elastic_recommender.compute_score(user_id)
         item_weights_6 = self.rp3_recommender.compute_score(user_id)
         # item_weights_7 = self.user_cbf_recommender.compute_score(user_id)
 
@@ -57,7 +58,7 @@ class Hybrid(object):
         # item_weights += item_weights_2 * self.slim_weight
         item_weights += item_weights_3 * self.item_cbf_weight
         item_weights += item_weights_4 * self.user_cf_weight
-        # item_weights += item_weights_5 * self.elastic_weight
+        item_weights += item_weights_5 * self.elastic_weight
         item_weights += item_weights_6 * self.rp3_weight
         # item_weights += item_weights_7 * self.user_cbf_weight
 

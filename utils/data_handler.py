@@ -7,6 +7,8 @@ import numpy as np
 from sklearn import preprocessing
 from tqdm import tqdm
 
+from utils.IR_feature_weighting import okapi_BM_25
+
 
 def data_csv_splitter(data_file):
 
@@ -107,18 +109,6 @@ def get_warm_items(urm_all):
     return warm_items  # , urm_all[:, warm_items]
 
 
-def single_icm_builder(single_icm_tuples):
-
-    items_list, attributes_list, values_list = row_col_data_lists(single_icm_tuples)
-
-    # A sparse matrix in COOrdinate format
-    # A sparse matrix is a matrix in which most of the elements are zero
-    single_icm = sps.coo_matrix((values_list, (items_list, attributes_list)))
-    single_icm = single_icm.tocsr()
-
-    return single_icm
-
-
 def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples):
 
     row_asset, column_asset, data_asset = row_col_data_lists(icm_asset_tuples)
@@ -156,6 +146,12 @@ def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_t
     icm_all = icm_all.tocsr()
 
     return icm_all
+
+
+def bm_25_feature_weighting(icm_all):
+    icm_bm25 = icm_all.astype(np.float32)
+    icm_bm25 = okapi_BM_25(icm_bm25)
+    return icm_bm25.tocsr()
 
 
 def ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples):

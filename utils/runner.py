@@ -32,16 +32,20 @@ class Runner:
         urm_tuples = data_csv_splitter("urm")
         self.urm_all = urm_all_builder(urm_tuples)
 
-    def get_icm_all(self):
+    def get_icm_all(self, feature_weighting=False):
         icm_asset_tuples = data_csv_splitter("icm_asset")
         icm_price_tuples = data_csv_splitter("icm_price")
         icm_sub_class_tuples = data_csv_splitter("icm_sub_class")
         self.icm_all = icm_all_builder(self.urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_tuples)
+        if feature_weighting:
+            self.icm_all = bm_25_feature_weighting(self.icm_all)
 
-    def get_ucm_all(self):
+    def get_ucm_all(self, feature_weighting=False):
         ucm_age_tuples = data_csv_splitter("ucm_age")
         ucm_region_tuples = data_csv_splitter("ucm_region")
         self.ucm_all = ucm_all_builder(self.urm_all, ucm_age_tuples, ucm_region_tuples)
+        if feature_weighting:
+            self.ucm_all = bm_25_feature_weighting(self.ucm_all)
 
     def split_dataset_holdout(self):
         print("Splitting dataset using holdout function...")

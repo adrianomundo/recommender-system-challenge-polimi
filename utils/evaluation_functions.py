@@ -68,7 +68,7 @@ def evaluate_algorithm(urm_test, recommender_object, at=10):
     cumulative_recall /= num_eval
     cumulative_map /= num_eval
 
-    print("Recommender performance is: Precision = {:.4f}, Recall = {:.4f}, MAP = {:.4f}".format(
+    print("Recommender performance is: Precision = {:.6f}, Recall = {:.6f}, MAP = {:.6f}".format(
         cumulative_precision, cumulative_recall, cumulative_map))
 
     result_dict = {
