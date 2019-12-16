@@ -89,10 +89,9 @@ class Runner:
         elif self.name == 'RP3beta':
             self.recommender.fit(matrix)
         elif self.name == 'hybrid':
-            self.get_warm_users()
             self.get_icm_all()
             self.get_ucm_all()
-            self.recommender.fit(matrix, self.warm_users, self.icm_all, self.ucm_all)
+            self.recommender.fit(matrix, self.icm_all, self.ucm_all)
         print("Model fitted")
 
     def run_recommendations(self):

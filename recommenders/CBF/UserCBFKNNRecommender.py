@@ -2,8 +2,6 @@ import numpy as np
 import scipy.sparse as sps
 from utils.Similarity.Cython.Compute_Similarity_Cython import Compute_Similarity_Cython
 
-from recommenders.base import TopPopRecommender
-
 
 class UserCBFKNNRecommender(object):
 
@@ -11,12 +9,10 @@ class UserCBFKNNRecommender(object):
         self.urm_train = None
         self.ucm_all = None
         self.W_sparse = None
-        self.top_rec = TopPopRecommender.TopPopRecommender()
 
     def fit(self, urm_train, ucm_all, top_k=800, shrink=5.0, normalize=True, similarity="cosine", load_matrix=False):
 
         self.urm_train = urm_train
-        self.top_rec.fit(self.urm_train)
 
         if not load_matrix:
             print("Computing userCBF similarity...")
@@ -34,16 +30,11 @@ class UserCBFKNNRecommender(object):
 
     def compute_score(self, user_id):
 
-        tmp = self.W_sparse[user_id, :]
-        return tmp.dot(self.urm_train).toarray().ravel()
+        return self.W_sparse[user_id, :].dot(self.urm_train).toarray().ravel()
 
     def recommend(self, user_id, at=10, exclude_seen=True):
 
         scores = self.compute_score(user_id)
-
-        if scores.sum() == 0.0:
-
-            return self.top_rec.recommend(user_id, at)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
