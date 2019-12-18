@@ -24,17 +24,13 @@ class UserCBFKNNTopPop(object):
 
         return self.user_cbf_recommender.compute_score(user_id)
 
-    def check_scores(self, scores, user_id, at):
-
-        if scores.sum() == 0.0:
-
-            return self.top_pop_recommender.recommend(user_id, at)
-
     def recommend(self, user_id, at=10, exclude_seen=True):
 
         scores = self.compute_score(user_id)
 
-        self.check_scores(scores, user_id, at)
+        if scores.sum() == 0.0:
+
+            return self.top_pop_recommender.recommend(user_id, at)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
