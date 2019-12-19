@@ -8,6 +8,7 @@ from recommenders.base import RandomRecommender, TopPopRecommender
 from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.hybrids import Hybrid
+from recommenders.MF import IALS
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -92,6 +93,8 @@ class Runner:
             self.get_icm_all()
             self.get_ucm_all()
             self.recommender.fit(matrix, self.icm_all, self.ucm_all)
+        elif self.name == 'IALS':
+            self.recommender.fit(matrix)
         print("Model fitted")
 
     def run_recommendations(self):
@@ -122,7 +125,7 @@ if __name__ == '__main__':
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
                                                                                     'SLIM_ElasticNet', 'RP3beta',
-                                                                                    'hybrid'])
+                                                                                    'hybrid', 'IALS'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
     args = parser.parse_args()
@@ -172,6 +175,10 @@ if __name__ == '__main__':
     elif args.recommender == 'hybrid':
         print("hybrid selected")
         recommender = Hybrid.Hybrid()
+
+    elif args.recommender == 'IALS':
+        print("IALS selected")
+        recommender = IALS.IALSRecommender()
 
     print(args)
     Runner(recommender, args.recommender, evaluate=args.eval, csv=args.csv).run()
