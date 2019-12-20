@@ -58,84 +58,7 @@ class IALSRecommender(object):
         self.USER_factors = self.USER_factors_best
         self.ITEM_factors = self.ITEM_factors_best
 
-    def _build_confidence_matrix(self, confidence_scaling):
-
-        if confidence_scaling == 'linear':
-            self.C = self._linear_scaling_confidence()
-        else:
-            self.C = self._log_scaling_confidence()
-
-        self.C_csc= check_matrix(self.C.copy(), format="csc", dtype = np.float32)
-
-    def _linear_scaling_confidence(self):
-
-        self.C = check_matrix(self.urm_train, format="csr", dtype = np.float32)
-        self.C.data = 1.0 + self.alpha*self.C.data
-
-        return self.C
-
-    def _log_scaling_confidence(self):
-
-        self.C = check_matrix(self.urm_train, format="csr", dtype = np.float32)
-        self.C.data = 1.0 + self.alpha * np.log(1.0 + self.C.data / self.epsilon)
-
-        return self.C
-
-    def _prepare_model_for_validation(self):
-        pass
-
-    def _update_best_model(self):
-        self.USER_factors_best = self.USER_factors.copy()
-        self.ITEM_factors_best = self.ITEM_factors.copy()
-
-    def _run_epoch(self, num_epoch):
-
-        VV = self.ITEM_factors.T.dot(self.ITEM_factors)
-
-        for user_id in self.warm_users:
-
-            start_pos = self.C.indptr[user_id]
-            end_pos = self.C.indptr[user_id + 1]
-
-            user_profile = self.C.indices[start_pos:end_pos]
-            user_confidence = self.C.data[start_pos:end_pos]
-
-            self.USER_factors[user_id, :] = self._update_row(user_profile, user_confidence, self.ITEM_factors, VV)
-
-        UU = self.USER_factors.T.dot(self.USER_factors)
-
-        for item_id in self.warm_items:
-
-            start_pos = self.C_csc.indptr[item_id]
-            end_pos = self.C_csc.indptr[item_id + 1]
-
-            item_profile = self.C_csc.indices[start_pos:end_pos]
-            item_confidence = self.C_csc.data[start_pos:end_pos]
-
-            self.ITEM_factors[item_id, :] = self._update_row(item_profile, item_confidence, self.USER_factors, UU)
-
-    def _update_row(self, interaction_profile, interaction_confidence, Y, YtY):
-
-        Y_interactions = Y[interaction_profile, :]
-
-        A = Y_interactions.T.dot(((interaction_confidence - 1) * Y_interactions.T).T)
-
-        B = YtY + A + self.regularization_diagonal
-
-        return np.dot(np.linalg.inv(B), Y_interactions.T.dot(interaction_confidence))
-
-    def _init_factors(self, num_factors, assign_values=True):
-
-        if assign_values:
-            return self.num_factors**-0.5*np.random.random_sample((num_factors, self.num_factors))
-
-        else:
-            return np.empty((num_factors, self.num_factors))
-
     def compute_score(self, user_id):
-
-        #user_profile = self.urm_train[user_id]
-        #return user_profile.dot(self.C).toarray().ravel()
 
         computed_score = np.dot(self.USER_factors[user_id], self.ITEM_factors.T)
         return np.squeeze(computed_score)
@@ -143,9 +66,13 @@ class IALSRecommender(object):
     def recommend(self, user_id, at=10, exclude_seen=True):
 
         scores = self.compute_score(user_id)
+
+        # TODO undestand unseen_warm_items -> see repo
+
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
         ranking = scores.argsort()[::-1]
+
         return ranking[:at]
 
     def filter_seen(self, user_id, scores):
@@ -159,11 +86,44 @@ class IALSRecommender(object):
 
         return scores
 
+    # UTILS FUNCTION NEEDED
+
+    def _init_factors(self, num_factors, assign_values=True):
+        if assign_values:
+            return self.num_factors ** -0.5 * np.random.random_sample((num_factors, self.num_factors))
+        else:
+            return np.empty((num_factors, self.num_factors))
+
+    def _build_confidence_matrix(self, confidence_scaling):
+        if confidence_scaling == 'linear':
+            self.C = self._linear_scaling_confidence()
+        else:
+            self.C = self._log_scaling_confidence()
+
+        self.C_csc = check_matrix(self.C.copy(), format="csc", dtype=np.float32)
+
+    def _linear_scaling_confidence(self):
+        self.C = check_matrix(self.urm_train, format="csr", dtype=np.float32)
+        self.C.data = 1.0 + self.alpha * self.C.data
+
+        return self.C
+
+    def _log_scaling_confidence(self):
+        self.C = check_matrix(self.urm_train, format="csr", dtype=np.float32)
+        self.C.data = 1.0 + self.alpha * np.log(1.0 + self.C.data / self.epsilon)
+
+        return self.C
+
+    def _update_best_model(self):
+        self.USER_factors_best = self.USER_factors.copy()
+        self.ITEM_factors_best = self.ITEM_factors.copy()
+
+    # EARLY STOPPING FUNCTIONS
+
     def _train_with_early_stopping(self, epochs_max, epochs_min=0,
                                    validation_every_n=None, stop_on_validation=False,
                                    validation_metric=None, lower_validations_allowed=None, evaluator_object=None,
                                    algorithm_name="Incremental_Training_Early_Stopping"):
-
         assert epochs_max > 0, "{}: Number of epochs_max must be > 0, passed was {}".format(algorithm_name, epochs_max)
         assert epochs_min >= 0, "{}: Number of epochs_min must be >= 0, passed was {}".format(algorithm_name,
                                                                                               epochs_min)
@@ -175,9 +135,9 @@ class IALSRecommender(object):
         # OR Train for max number of epochs with validation AND early stopping
         assert evaluator_object is None or \
                (
-                           evaluator_object is not None and not stop_on_validation and validation_every_n is not None and validation_metric is not None) or \
+                       evaluator_object is not None and not stop_on_validation and validation_every_n is not None and validation_metric is not None) or \
                (
-                           evaluator_object is not None and stop_on_validation and validation_every_n is not None and validation_metric is not None and lower_validations_allowed is not None), \
+                       evaluator_object is not None and stop_on_validation and validation_every_n is not None and validation_metric is not None and lower_validations_allowed is not None), \
             "{}: Inconsistent parameters passed, please check the supported uses".format(algorithm_name)
 
         start_time = time.time()
@@ -233,7 +193,7 @@ class IALSRecommender(object):
                     convergence = True
 
                     elapsed_time = time.time() - start_time
-                    new_time_value, new_time_unit = self.seconds_to_biggest_unit(elapsed_time)
+                    new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
 
                     print(
                         "{}: Convergence reached! Terminating at epoch {}. Best value for '{}' at epoch {} is {:.4f}. Elapsed time {:.2f} {}".format(
@@ -241,7 +201,7 @@ class IALSRecommender(object):
                             self.best_validation_metric, new_time_value, new_time_unit))
 
             elapsed_time = time.time() - start_time
-            new_time_value, new_time_unit = self.seconds_to_biggest_unit(elapsed_time)
+            new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
 
             print("{}: Epoch {} of {}. Elapsed time {:.2f} {}".format(
                 algorithm_name, epochs_current + 1, epochs_max, new_time_value, new_time_unit))
@@ -259,7 +219,7 @@ class IALSRecommender(object):
         # Stop when max epochs reached and not early-stopping
         if not convergence:
             elapsed_time = time.time() - start_time
-            new_time_value, new_time_unit = self.seconds_to_biggest_unit(elapsed_time)
+            new_time_value, new_time_unit = seconds_to_biggest_unit(elapsed_time)
 
             if evaluator_object is not None:
                 print(
@@ -270,38 +230,40 @@ class IALSRecommender(object):
                 print("{}: Terminating at epoch {}. Elapsed time {:.2f} {}".format(
                     algorithm_name, epochs_current, new_time_value, new_time_unit))
 
-    def seconds_to_biggest_unit(self, time_in_seconds):
+    def _run_epoch(self, num_epoch):
 
-        conversion_factor = [
-            ("sec", 60),
-            ("min", 60),
-            ("hour", 24),
-            ("day", 365),
-        ]
+        VV = self.ITEM_factors.T.dot(self.ITEM_factors)
 
-        terminate = False
-        unit_index = 0
+        for user_id in self.warm_users:
+            start_pos = self.C.indptr[user_id]
+            end_pos = self.C.indptr[user_id + 1]
 
-        new_time_value = time_in_seconds
-        new_time_unit = "sec"
+            user_profile = self.C.indices[start_pos:end_pos]
+            user_confidence = self.C.data[start_pos:end_pos]
 
-        while not terminate:
+            self.USER_factors[user_id, :] = self._update_row(user_profile, user_confidence, self.ITEM_factors, VV)
 
-            next_time = new_time_value / conversion_factor[unit_index][1]
+        UU = self.USER_factors.T.dot(self.USER_factors)
 
-            if next_time >= 1.0:
-                new_time_value = next_time
+        for item_id in self.warm_items:
+            start_pos = self.C_csc.indptr[item_id]
+            end_pos = self.C_csc.indptr[item_id + 1]
 
-                unit_index += 1
-                new_time_unit = conversion_factor[unit_index][0]
+            item_profile = self.C_csc.indices[start_pos:end_pos]
+            item_confidence = self.C_csc.data[start_pos:end_pos]
 
-            else:
-                terminate = True
+            self.ITEM_factors[item_id, :] = self._update_row(item_profile, item_confidence, self.USER_factors, UU)
 
-        return new_time_value, new_time_unit
+    def _update_row(self, interaction_profile, interaction_confidence, Y, YtY):
+        Y_interactions = Y[interaction_profile, :]
 
+        A = Y_interactions.T.dot(((interaction_confidence - 1) * Y_interactions.T).T)
 
+        B = YtY + A + self.regularization_diagonal
 
+        return np.dot(np.linalg.inv(B), Y_interactions.T.dot(interaction_confidence))
 
+    def _prepare_model_for_validation(self):
+        pass
 
 
