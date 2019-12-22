@@ -115,50 +115,32 @@ def icm_all_builder(urm_all, icm_asset_tuples, icm_price_tuples, icm_sub_class_t
     row_price, column_price, data_price = row_col_data_lists(icm_price_tuples)
     row_sub_class, column_sub_class, data_sub_class = row_col_data_lists(icm_sub_class_tuples)
 
-    item_popularity = (urm_all > 0).sum(axis=0)
-    item_popularity = np.array(item_popularity).squeeze()
-    row_item_popularity = np.arange(len(item_popularity))
-    data_item_popularity = list(item_popularity)
-    data_item_popularity = [float(item) for item in data_item_popularity]
-
-    le_item_popularity = preprocessing.LabelEncoder()
-    le_item_popularity.fit(data_item_popularity)
-    data_item_popularity = le_item_popularity.transform(data_item_popularity)
-
     le_asset = preprocessing.LabelEncoder()
     le_asset.fit(data_asset)
     data_asset = le_asset.transform(data_asset)
-    # print(data_asset[0:10])
 
     le_price = preprocessing.LabelEncoder()
     le_price.fit(data_price)
     data_price = le_price.transform(data_price)
-    # print(data_price[0:10])
 
     n_items = urm_all.shape[1]
     n_features_icm_asset = max(data_asset) + 1
     n_features_icm_price = max(data_price) + 1
     n_features_icm_sub_class = max(column_sub_class) + 1
-    n_features_item_popularity = max(data_item_popularity) + 1
 
     icm_asset_shape = (n_items, n_features_icm_asset)
     icm_price_shape = (n_items, n_features_icm_price)
     icm_sub_class_shape = (n_items, n_features_icm_sub_class)
-    icm_item_popularity_shape = (n_items, n_features_item_popularity)
 
     ones_icm_asset = np.ones(len(data_asset))
     ones_icm_price = np.ones(len(data_price))
-    ones_icm_item_popularity = np.ones(len(data_item_popularity))
 
     icm_asset = sps.coo_matrix((ones_icm_asset, (row_asset, data_asset)), shape=icm_asset_shape)
     icm_price = sps.coo_matrix((ones_icm_price, (row_price, data_price)), shape=icm_price_shape)
     icm_sub_class = sps.coo_matrix((data_sub_class, (row_sub_class, column_sub_class)), shape=icm_sub_class_shape)
-    icm_item_popularity = sps.coo_matrix((ones_icm_item_popularity, (row_item_popularity, data_item_popularity)),
-                                         shape=icm_item_popularity_shape)
 
     icm_all = hstack((icm_asset, icm_price))
     icm_all = hstack((icm_all, icm_sub_class))
-    icm_all = hstack((icm_all, icm_item_popularity))
     icm_all = icm_all.tocsr()
 
     return icm_all

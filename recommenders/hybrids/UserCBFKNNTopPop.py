@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import hstack
 
 from recommenders.CBF import UserCBFKNNRecommender
 from recommenders.base import TopPopRecommender
@@ -13,10 +14,14 @@ class UserCBFKNNTopPop(object):
         self.user_cbf_recommender = UserCBFKNNRecommender.UserCBFKNNRecommender()
         self.top_pop_recommender = TopPopRecommender.TopPopRecommender()
 
-    def fit(self, urm_train, ucm_all, load_matrix=False):
+    def fit(self, urm_train, ucm_all, stack_matrices=False, load_matrix=False):
 
         self.urm_train = urm_train
         self.ucm_all = ucm_all
+
+        if stack_matrices:
+            self.ucm_all = hstack((self.urm_train, self.ucm_all))
+
         self.user_cbf_recommender.fit(self.urm_train, self.ucm_all, load_matrix=load_matrix)
         self.top_pop_recommender.fit(self.urm_train)
 
@@ -49,3 +54,47 @@ class UserCBFKNNTopPop(object):
         scores[user_profile] = -np.inf
 
         return scores
+
+    ''' 
+    # version with merged ranking
+    def recommend(self, user_id, at=10):
+
+    user_cbf_score = self.user_cbf_recommender.compute_score(user_id)
+    top_pop_ranking = self.top_pop_recommender.recommend(user_id, at)
+
+    if user_cbf_score.sum() == 0.0:
+        return top_pop_ranking
+
+    user_cbf_ranking = self.user_cbf_recommender.recommend(user_id, at)
+
+    intersection = np.intersect1d(user_cbf_ranking, top_pop_ranking)
+
+    if len(intersection) == 0:
+        return user_cbf_score
+
+    merged_ranking = {}
+    indices_user_cbf = []
+    indices_top_pop = []
+
+    for item in intersection:
+
+        index_1 = np.where(user_cbf_ranking == item)
+        indices_user_cbf.append(index_1)
+        index_2 = np.where(top_pop_ranking == item)
+        indices_top_pop.append(index_2)
+        tmp_array = np.array([index_1, index_2])
+
+        median = np.median(tmp_array)
+
+        merged_ranking[item] = median
+
+    merged_ranking = sorted(merged_ranking, key=merged_ranking.__getitem__)
+    merged_ranking = np.asarray(merged_ranking)
+
+    new_user_cbf_ranking = np.delete(user_cbf_ranking, indices_user_cbf)
+    new_top_pop_ranking = np.delete(top_pop_ranking, indices_top_pop)
+
+    merged_ranking = np.append(merged_ranking, new_user_cbf_ranking)
+
+    return merged_ranking
+    '''

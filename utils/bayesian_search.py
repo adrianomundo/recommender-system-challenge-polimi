@@ -30,9 +30,8 @@ def run(item_cbf_weight, item_cf_weight, elastic_weight, rp3_weight, user_cf_wei
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'item_cbf_weight': (0, 5), 'item_cf_weight': (0, 5),
-           'elastic_weight': (0, 5), 'rp3_weight': (0, 5), 'user_cf_weight': (0, 5),
-           'slim_bpr_weight': (0, 5)}
+    pbounds = {'item_cbf_weight': (0, 10), 'item_cf_weight': (0, 10), 'elastic_weight': (0, 1), 'rp3_weight': (0, 10),
+               'user_cf_weight': (0, 0.5), 'slim_bpr_weight': (0, 1.5)}
 
     optimizer = BayesianOptimization(
         f=run,
@@ -42,7 +41,8 @@ if __name__ == '__main__':
 
     optimizer.maximize(
         init_points=30,  # random steps
-        n_iter=170
+        n_iter=170,
+        kappa=10
     )
 
     print(optimizer.max)
