@@ -5,7 +5,7 @@ from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
 
-def run(item_cbf_weight, item_cf_weight, elastic_weight, rp3_weight, user_cf_weight, slim_bpr_weight):
+def run(elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight, slim_bpr_weight, user_cf_weight):
 
     urm_tuples = data_csv_splitter("urm")
     urm_all = urm_all_builder(urm_tuples)
@@ -21,8 +21,8 @@ def run(item_cbf_weight, item_cf_weight, elastic_weight, rp3_weight, user_cf_wei
     ucm_region_tuples = data_csv_splitter("ucm_region")
     ucm_all = ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples)
 
-    recommender = Hybrid.Hybrid(item_cbf_weight, item_cf_weight, elastic_weight, rp3_weight, user_cf_weight,
-                                slim_bpr_weight)
+    recommender = Hybrid.Hybrid(elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight, slim_bpr_weight,
+                                user_cf_weight)
     recommender.fit(urm_train, icm_all, ucm_all, load_matrix=True)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
@@ -30,8 +30,8 @@ def run(item_cbf_weight, item_cf_weight, elastic_weight, rp3_weight, user_cf_wei
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'item_cbf_weight': (0, 10), 'item_cf_weight': (0, 10), 'elastic_weight': (0, 1), 'rp3_weight': (0, 10),
-               'user_cf_weight': (0, 0.5), 'slim_bpr_weight': (0, 1.5)}
+    pbounds = {'elastic_weight': (0, 1), 'item_cbf_weight': (4, 8), 'item_cf_weight': (4, 8), 'rp3_weight': (5, 10),
+               'slim_bpr_weight': (0, 0.5), 'user_cf_weight': (0, 0.1)}
 
     optimizer = BayesianOptimization(
         f=run,
