@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import hstack
 
 from recommenders.CBF import UserCBFKNNRecommender
 from recommenders.base import TopPopRecommender
@@ -14,13 +13,10 @@ class UserCBFKNNTopPop(object):
         self.user_cbf_recommender = UserCBFKNNRecommender.UserCBFKNNRecommender()
         self.top_pop_recommender = TopPopRecommender.TopPopRecommender()
 
-    def fit(self, urm_train, ucm_all, stack_matrices=False, load_matrix=False):
+    def fit(self, urm_train, ucm_all, load_matrix=False):
 
         self.urm_train = urm_train
         self.ucm_all = ucm_all
-
-        if stack_matrices:
-            self.ucm_all = hstack((self.urm_train, self.ucm_all))
 
         self.user_cbf_recommender.fit(self.urm_train, self.ucm_all, load_matrix=load_matrix)
         self.top_pop_recommender.fit(self.urm_train)

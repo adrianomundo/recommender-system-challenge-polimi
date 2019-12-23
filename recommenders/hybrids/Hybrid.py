@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse import hstack
 
 from recommenders.CBF import ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
@@ -10,8 +11,8 @@ from recommenders.hybrids import UserCBFKNNTopPop
 
 class Hybrid(object):
 
-    def __init__(self, elastic_weight=0.8208, item_cbf_weight=6.683, item_cf_weight=6.917, rp3_weight=8.761,
-                 slim_bpr_weight=0.1484, user_cf_weight=0.02973):
+    def __init__(self, elastic_weight=0.99905, item_cbf_weight=6.80204, item_cf_weight=4.09051, rp3_weight=5.29716,
+                 slim_bpr_weight=0.28171, user_cf_weight=0.07037):
 
         self.urm_train = None
 
@@ -30,6 +31,7 @@ class Hybrid(object):
         self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
 
         self.fallback_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
+        # self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
     def fit(self, urm_train, icm_all, ucm_all, load_matrix=False):
 
@@ -42,7 +44,9 @@ class Hybrid(object):
         self.slim_bpr_recommender.fit(urm_train, load_matrix=load_matrix)
         self.user_cf_recommender.fit(urm_train, load_matrix=load_matrix)
 
-        self.fallback_recommender.fit(urm_train, ucm_all, stack_matrices=False, load_matrix=load_matrix)
+        self.fallback_recommender.fit(urm_train, ucm_all, load_matrix=load_matrix)
+        # self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
+        #                                          load_matrix=load_matrix)
 
     def compute_score(self, user_id):
 
@@ -69,6 +73,7 @@ class Hybrid(object):
         if scores.sum() == 0.0:
 
             return self.fallback_recommender.recommend(user_id, at)
+            # return self.fallback_with_hstack_recommender.recommend(user_id, at)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
