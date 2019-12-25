@@ -5,7 +5,6 @@ import sys
 
 
 class IALSRecommender(object):
-
     RECOMMENDER_NAME = "IALSRecommender"
 
     AVAILABLE_CONFIDENCE_SCALING = ["linear", "log"]
@@ -25,7 +24,8 @@ class IALSRecommender(object):
         self.C = None
         self.urm_all = None
 
-    def fit(self, urm_train, epochs = 300, num_factors = 20, confidence_scaling = "linear", alpha = 1.0, epsilon = 1.0, reg = 1e-3, init_mean=0.0, init_std=0.1, **earlystopping_kwargs):
+    def fit(self, urm_train, epochs=300, num_factors=20, confidence_scaling="linear", alpha=1.0, epsilon=1.0, reg=1e-3,
+            init_mean=0.0, init_std=0.1, **earlystopping_kwargs):
 
         self.urm_train = urm_train
         self.n_users = urm_train.shape[0]
@@ -37,7 +37,9 @@ class IALSRecommender(object):
         self.reg = reg
 
         if confidence_scaling not in self.AVAILABLE_CONFIDENCE_SCALING:
-            raise ValueError("Value for 'confidence_scaling' not recognized. Acceptable values are {}, provided was '{}'".format(self.AVAILABLE_CONFIDENCE_SCALING, confidence_scaling))
+            raise ValueError(
+                "Value for 'confidence_scaling' not recognized. Acceptable values are {}, provided was '{}'".format(
+                    self.AVAILABLE_CONFIDENCE_SCALING, confidence_scaling))
 
         self.USER_factors = self._init_factors(self.n_users, False)  # don't need values, will compute them
         self.ITEM_factors = self._init_factors(self.n_items)
@@ -53,7 +55,7 @@ class IALSRecommender(object):
 
         self._update_best_model()
 
-        self._train_with_early_stopping(epochs, algorithm_name = self.RECOMMENDER_NAME, **earlystopping_kwargs)
+        self._train_with_early_stopping(epochs, algorithm_name=self.RECOMMENDER_NAME, **earlystopping_kwargs)
 
         self.USER_factors = self.USER_factors_best
         self.ITEM_factors = self.ITEM_factors_best
@@ -67,7 +69,7 @@ class IALSRecommender(object):
 
         scores = self.compute_score(user_id)
 
-        # TODO undestand unseen_warm_items -> see repo
+        # TODO understand unseen_warm_items -> see repo
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
@@ -265,5 +267,3 @@ class IALSRecommender(object):
 
     def _prepare_model_for_validation(self):
         pass
-
-

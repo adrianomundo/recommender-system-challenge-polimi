@@ -7,7 +7,6 @@ class UserCBFKNNRecommender(object):
 
     def __init__(self):
         self.urm_train = None
-        self.ucm_all = None
         self.W_sparse = None
 
     def fit(self, urm_train, ucm_all, top_k=800, shrink=5.0, normalize=True, similarity="cosine", load_matrix=False):
@@ -16,8 +15,7 @@ class UserCBFKNNRecommender(object):
 
         if not load_matrix:
             print("Computing userCBF similarity...")
-            self.ucm_all = ucm_all
-            similarity_object = Compute_Similarity_Cython(self.ucm_all.T, shrink=shrink,
+            similarity_object = Compute_Similarity_Cython(ucm_all.T, shrink=shrink,
                                                           topK=top_k, normalize=normalize,
                                                           similarity=similarity)
 

@@ -6,7 +6,7 @@ from recommenders.GraphBased import RP3betaRecommender
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from recommenders.base import TopPopRecommender
-from recommenders.hybrids import UserCBFKNNTopPop
+from recommenders.hybrids import UserCBFKNNTopPop, Hybrid
 from utils.data_handler import *
 from utils.evaluation_functions import user_wise_evaluation
 
@@ -28,6 +28,8 @@ class UserWiseEvaluation(object):
         self.fallback_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
         self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
+        self.hybrid_recommender = Hybrid.Hybrid()
+
     def fit(self, urm_train, icm_all, ucm_all, load_matrix=False):
 
         self.urm_train = urm_train
@@ -44,6 +46,9 @@ class UserWiseEvaluation(object):
         self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
                                                   load_matrix=load_matrix)
 
+        self.hybrid_recommender.fit(urm_train, icm_all, ucm_all, load_matrix=load_matrix)
+        # self.hybrid_recommender.fit(urm_train, icm_all, hstack((self.urm_train, ucm_all)), load_matrix=load_matrix)
+
     def evaluate_and_plot(self, urm_test, initial_target_users):
 
         map_elastic_per_group = []
@@ -56,6 +61,8 @@ class UserWiseEvaluation(object):
 
         map_fallback_per_group = []
         map_fallback_with_hstack_per_group = []
+
+        map_hybrid_per_group = []
 
         profile_length = np.ediff1d(self.urm_train.indptr)
         block_size = int(len(profile_length) * 0.05)
@@ -117,6 +124,10 @@ class UserWiseEvaluation(object):
             results = user_wise_evaluation(urm_test, users_in_group, self.fallback_with_hstack_recommender, at=10)
             map_fallback_with_hstack_per_group.append(results)
 
+            print("Evaluating hybrid...")
+            results = user_wise_evaluation(urm_test, users_in_group, self.hybrid_recommender, at=10)
+            map_hybrid_per_group.append(results)
+
         print("Total number of users evaluated: " + str(total_number_of_users))
 
         pyplot.plot(map_elastic_per_group, label="ElasticNet")
@@ -128,6 +139,7 @@ class UserWiseEvaluation(object):
         pyplot.plot(map_user_cf_per_group, label="UserCF")
         pyplot.plot(map_fallback_per_group, label="Fallback")
         pyplot.plot(map_fallback_with_hstack_per_group, label="Fallback (hstack)")
+        pyplot.plot(map_hybrid_per_group, label="Hybrid")
 
         pyplot.xlabel('User Group')
         pyplot.ylabel('MAP')

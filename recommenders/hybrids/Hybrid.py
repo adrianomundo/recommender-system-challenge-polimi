@@ -11,8 +11,8 @@ from recommenders.hybrids import UserCBFKNNTopPop
 
 class Hybrid(object):
 
-    def __init__(self, elastic_weight=0.99905, item_cbf_weight=6.80204, item_cf_weight=4.09051, rp3_weight=5.29716,
-                 slim_bpr_weight=0.28171, user_cf_weight=0.07037):
+    def __init__(self, elastic_weight=1.35537, item_cbf_weight=5.80058, item_cf_weight=4.54170, rp3_weight=6.03917,
+                 slim_bpr_weight=0.03816, user_cf_weight=0.09442):
 
         self.urm_train = None
 
