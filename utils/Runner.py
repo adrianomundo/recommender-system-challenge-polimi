@@ -102,7 +102,9 @@ class Runner:
         elif self.name == 'hybrid':
             self.get_icm_all()
             self.get_ucm_all()
-            self.recommender.fit(matrix, self.icm_all, self.ucm_all)
+            self.get_warm_users()
+            self.get_warm_items()
+            self.recommender.fit(matrix, self.icm_all, self.ucm_all, self.warm_users, self.warm_items)
         elif self.name == 'fallback':
             self.get_ucm_all()
             self.recommender.fit(matrix, self.ucm_all)

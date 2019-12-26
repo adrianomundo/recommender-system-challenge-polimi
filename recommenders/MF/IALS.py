@@ -1,8 +1,9 @@
-import numpy as np
-import time
 import sys
+import time
 
-from utils.data_handler import seconds_to_biggest_unit, check_matrix
+import numpy as np
+
+from utils.data_handler import check_matrix, seconds_to_biggest_unit
 
 
 class IALSRecommender(object):
@@ -13,6 +14,8 @@ class IALSRecommender(object):
     def __init__(self):
 
         self.urm_train = None
+        self.n_users = None
+        self.n_items = None
         self.alpha = None
         self.num_factors = None
         self.epsilon = None
@@ -24,39 +27,54 @@ class IALSRecommender(object):
         self.ITEM_factors = None
         self.C = None
 
-    def fit(self, urm_train, warm_users, warm_items, epochs=10, num_factors=20, confidence_scaling="linear",
-            alpha=1.0, epsilon=1.0, reg=1e-3, init_mean=0.0, init_std=0.1, **earlystopping_kwargs):
+    def fit(self, urm_train, warm_users, warm_items, epochs=200, num_factors=20, confidence_scaling="linear",
+            alpha=1.0, epsilon=1.0, reg=1e-3, init_mean=0.0, init_std=0.1, save_matrix=False, load_matrix=False,
+            **earlystopping_kwargs):
 
         self.urm_train = urm_train
-        self.n_users = urm_train.shape[0]
-        self.n_items = urm_train.shape[1]
 
-        self.num_factors = num_factors
-        self.alpha = alpha
-        self.epsilon = epsilon
-        self.reg = reg
+        if not load_matrix:
+            self.n_users = urm_train.shape[0]
+            self.n_items = urm_train.shape[1]
 
-        if confidence_scaling not in self.AVAILABLE_CONFIDENCE_SCALING:
-            raise ValueError(
-                "Value for 'confidence_scaling' not recognized. Acceptable values are {}, provided was '{}'".format(
-                    self.AVAILABLE_CONFIDENCE_SCALING, confidence_scaling))
+            self.num_factors = num_factors
+            self.alpha = alpha
+            self.epsilon = epsilon
+            self.reg = reg
 
-        self.USER_factors = self._init_factors(self.n_users, False)  # don't need values, will compute them
-        self.ITEM_factors = self._init_factors(self.n_items)
+            if confidence_scaling not in self.AVAILABLE_CONFIDENCE_SCALING:
+                raise ValueError(
+                    "Value for 'confidence_scaling' not recognized. Acceptable values are {}, provided was '{}'".format(
+                        self.AVAILABLE_CONFIDENCE_SCALING, confidence_scaling))
 
-        self._build_confidence_matrix(confidence_scaling)
+            self.USER_factors = self._init_factors(self.n_users, False)  # don't need values, will compute them
+            self.ITEM_factors = self._init_factors(self.n_items)
 
-        self.warm_users = warm_users
-        self.warm_items = warm_items
+            self._build_confidence_matrix(confidence_scaling)
 
-        self.regularization_diagonal = np.diag(self.reg * np.ones(self.num_factors))
+            self.warm_users = warm_users
+            self.warm_items = warm_items
 
-        self._update_best_model()
+            self.regularization_diagonal = np.diag(self.reg * np.ones(self.num_factors))
 
-        self._train_with_early_stopping(epochs, algorithm_name=self.RECOMMENDER_NAME, **earlystopping_kwargs)
+            self._update_best_model()
 
-        self.USER_factors = self.USER_factors_best
-        self.ITEM_factors = self.ITEM_factors_best
+            self._train_with_early_stopping(epochs, algorithm_name=self.RECOMMENDER_NAME, **earlystopping_kwargs)
+
+            self.USER_factors = self.USER_factors_best
+            self.ITEM_factors = self.ITEM_factors_best
+            if save_matrix:
+                np.savez_compressed("../tmp/IALS_USER_factors_matrix.npz", self.USER_factors)
+                np.savez_compressed("../tmp/IALS_ITEM_factors_matrix.npz", self.ITEM_factors)
+                print("Matrices saved!")
+        else:
+            print("Loading IALS_USER_factors_matrix.npz file...")
+            USER_factors_dict = np.load("../tmp/IALS_USER_factors_matrix.npz")
+            self.USER_factors = USER_factors_dict['arr_0']
+            print("Loading IALS_ITEM_factors_matrix.npz file...")
+            ITEM_factors_dict = np.load("../tmp/IALS_ITEM_factors_matrix.npz")
+            self.ITEM_factors = ITEM_factors_dict['arr_0']
+            print("Matrices loaded!")
 
     def compute_score(self, user_id):
 
@@ -66,8 +84,6 @@ class IALSRecommender(object):
     def recommend(self, user_id, at=10, exclude_seen=True):
 
         scores = self.compute_score(user_id)
-
-        # TODO understand unseen_warm_items -> see repo
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
