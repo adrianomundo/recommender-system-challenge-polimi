@@ -7,12 +7,13 @@ from recommenders.GraphBased import RP3betaRecommender
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from recommenders.hybrids import UserCBFKNNTopPop
+from recommenders.MF import IALS
 
 
 class Hybrid(object):
 
     def __init__(self, elastic_weight=1.35537, item_cbf_weight=5.80058, item_cf_weight=4.54170, rp3_weight=6.03917,
-                 slim_bpr_weight=0.03816, user_cf_weight=0.09442):
+                 slim_bpr_weight=0.03816, user_cf_weight=0.09442, ials_weight=2.0):
 
         self.urm_train = None
 
@@ -22,6 +23,7 @@ class Hybrid(object):
         self.rp3_weight = rp3_weight
         self.slim_bpr_weight = slim_bpr_weight
         self.user_cf_weight = user_cf_weight
+        self.ials_weight = ials_weight
 
         self.elastic_recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
         self.item_cbf_recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
@@ -29,9 +31,10 @@ class Hybrid(object):
         self.rp3_recommender = RP3betaRecommender.RP3betaRecommender()
         self.slim_bpr_recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
         self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
+        self.ials_recommender = IALS.IALSRecommender()
 
-        self.fallback_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
-        # self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
+        #self.fallback_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
+        self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
     def fit(self, urm_train, icm_all, ucm_all, load_matrix=False):
 
@@ -43,10 +46,11 @@ class Hybrid(object):
         self.rp3_recommender.fit(urm_train, load_matrix=load_matrix)
         self.slim_bpr_recommender.fit(urm_train, load_matrix=load_matrix)
         self.user_cf_recommender.fit(urm_train, load_matrix=load_matrix)
+        self.ials_recommender.fit(urm_train)
 
-        self.fallback_recommender.fit(urm_train, ucm_all, load_matrix=load_matrix)
-        # self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
-        #                                          load_matrix=load_matrix)
+        #self.fallback_recommender.fit(urm_train, ucm_all, load_matrix=load_matrix)
+        self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
+                                                  load_matrix=load_matrix)
 
     def compute_score(self, user_id):
 
@@ -56,6 +60,7 @@ class Hybrid(object):
         item_weights_4 = self.rp3_recommender.compute_score(user_id)
         item_weights_5 = self.slim_bpr_recommender.compute_score(user_id)
         item_weights_6 = self.user_cf_recommender.compute_score(user_id)
+        item_weights_7 = self.ials_recommender.compute_score(user_id)
 
         item_weights = item_weights_1 * self.elastic_weight
         item_weights += item_weights_2 * self.item_cbf_weight
@@ -63,6 +68,7 @@ class Hybrid(object):
         item_weights += item_weights_4 * self.rp3_weight
         item_weights += item_weights_5 * self.slim_bpr_weight
         item_weights += item_weights_6 * self.user_cf_weight
+        item_weights += item_weights_7 * self.ials_weight
 
         return item_weights
 
@@ -72,8 +78,8 @@ class Hybrid(object):
 
         if scores.sum() == 0.0:
 
-            return self.fallback_recommender.recommend(user_id, at)
-            # return self.fallback_with_hstack_recommender.recommend(user_id, at)
+            #return self.fallback_recommender.recommend(user_id, at)
+            return self.fallback_with_hstack_recommender.recommend(user_id, at)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)

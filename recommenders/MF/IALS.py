@@ -24,8 +24,8 @@ class IALSRecommender(object):
         self.C = None
         self.urm_all = None
 
-    def fit(self, urm_train, epochs=300, num_factors=20, confidence_scaling="linear", alpha=1.0, epsilon=1.0, reg=1e-3,
-            init_mean=0.0, init_std=0.1, **earlystopping_kwargs):
+    def fit(self, urm_train, epochs=200, num_factors=20, confidence_scaling="linear", alpha=1.0, epsilon=1.0, reg=1e-3,
+            init_mean=0.0, init_std=0.1, load_matrix=False, **earlystopping_kwargs):
 
         self.urm_train = urm_train
         self.n_users = urm_train.shape[0]
