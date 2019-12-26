@@ -10,7 +10,7 @@ class UserCBFKNNRecommender(object):
         self.W_sparse = None
 
     def fit(self, urm_train, ucm_all, top_k=1612, shrink=5.5779, normalize=True, similarity="jaccard",
-            load_matrix=False):
+            save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -21,7 +21,9 @@ class UserCBFKNNRecommender(object):
                                                           similarity=similarity)
 
             self.W_sparse = similarity_object.compute_similarity()
-            sps.save_npz("../tmp/userCBF_similarity_matrix.npz", self.W_sparse)
+            if save_matrix:
+                sps.save_npz("../tmp/userCBF_similarity_matrix.npz", self.W_sparse)
+                print("Matrix saved!")
         else:
             print("Loading userCBF_similarity_matrix.npz file...")
             self.W_sparse = sps.load_npz("../tmp/userCBF_similarity_matrix.npz")

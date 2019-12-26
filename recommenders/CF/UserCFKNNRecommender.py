@@ -9,7 +9,8 @@ class UserCFKNNRecommender(object):
         self.urm_train = None
         self.W_sparse = None
 
-    def fit(self, urm_train, top_k=590, shrink=0.0, normalize=True, similarity="cosine", load_matrix=False):
+    def fit(self, urm_train, top_k=590, shrink=0.0, normalize=True, similarity="cosine",
+            save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -20,7 +21,9 @@ class UserCFKNNRecommender(object):
                                                           similarity=similarity)
 
             self.W_sparse = similarity_object.compute_similarity()
-            sps.save_npz("../tmp/userCF_similarity_matrix.npz", self.W_sparse)
+            if save_matrix:
+                sps.save_npz("../tmp/userCF_similarity_matrix.npz", self.W_sparse)
+                print("Matrix saved!")
         else:
             print("Loading userCF_similarity_matrix.npz file...")
             self.W_sparse = sps.load_npz("../tmp/userCF_similarity_matrix.npz")

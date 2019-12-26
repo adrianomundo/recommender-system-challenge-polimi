@@ -21,9 +21,9 @@ def run(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight
     ucm_region_tuples = data_csv_splitter("ucm_region")
     ucm_all = ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples)
 
-    recommender = Hybrid.Hybrid(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight, slim_bpr_weight,
-                                user_cf_weight)
-    recommender.fit(urm_train, icm_all, ucm_all, load_matrix=True)
+    recommender = Hybrid.Hybrid(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight,
+                                slim_bpr_weight, user_cf_weight)
+    recommender.fit(urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 

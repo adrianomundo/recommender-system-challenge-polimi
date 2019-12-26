@@ -19,7 +19,7 @@ class SLIMElasticNetRecommender(object):
         self.model = None
         self.W_sparse = None
 
-    def fit(self, urm_train, l1_ratio=0.1, positive_only=True, top_k=100, load_matrix=False):
+    def fit(self, urm_train, l1_ratio=0.1, positive_only=True, top_k=100, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -128,7 +128,9 @@ class SLIMElasticNetRecommender(object):
             # generate the sparse weight matrix
             self.W_sparse = sps.csr_matrix((values[:num_cells], (rows[:num_cells], cols[:num_cells])),
                                            shape=(n_items, n_items), dtype=np.float32)
-            sps.save_npz("../tmp/SLIM_ElasticNet_similarity_matrix.npz", self.W_sparse)
+            if save_matrix:
+                sps.save_npz("../tmp/SLIM_ElasticNet_similarity_matrix.npz", self.W_sparse)
+                print("Matrix saved!")
         else:
             print("Loading SLIM_ElasticNet_similarity_matrix.npz file...")
             self.W_sparse = sps.load_npz("../tmp/SLIM_ElasticNet_similarity_matrix.npz")

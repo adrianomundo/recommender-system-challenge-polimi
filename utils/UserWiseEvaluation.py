@@ -1,13 +1,16 @@
+import numpy as np
 from matplotlib import pyplot
+from scipy.sparse import hstack
 
+from recommenders.Base import TopPopRecommender
 from recommenders.CBF import ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.GraphBased import RP3betaRecommender
+from recommenders.Hybrids import UserCBFKNNTopPop, Hybrid
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
-from recommenders.base import TopPopRecommender
-from recommenders.Hybrids import UserCBFKNNTopPop, Hybrid
-from utils.data_handler import *
+from utils.data_handler import data_csv_splitter, urm_all_builder, train_test_holdout, icm_all_builder, \
+    ucm_all_builder, target_users_list
 from utils.evaluation_functions import user_wise_evaluation
 
 
@@ -25,29 +28,27 @@ class UserWiseEvaluation(object):
         self.top_pop_recommender = TopPopRecommender.TopPopRecommender()
         self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
 
-        self.fallback_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
         self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
         self.hybrid_recommender = Hybrid.Hybrid()
 
-    def fit(self, urm_train, icm_all, ucm_all, load_matrix=False):
+    def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
-        self.elastic_recommender.fit(urm_train, load_matrix=load_matrix)
-        self.item_cbf_recommender.fit(urm_train, icm_all, load_matrix=load_matrix)
-        self.item_cf_recommender.fit(urm_train, load_matrix=load_matrix)
-        self.rp3_recommender.fit(urm_train, load_matrix=load_matrix)
-        self.slim_bpr_recommender.fit(urm_train, load_matrix=load_matrix)
+        self.elastic_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
+        self.item_cbf_recommender.fit(urm_train, icm_all, save_matrix=save_matrix, load_matrix=load_matrix)
+        self.item_cf_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
+        self.rp3_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
+        self.slim_bpr_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.top_pop_recommender.fit(urm_train)
-        self.user_cf_recommender.fit(urm_train, load_matrix=load_matrix)
+        self.user_cf_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
 
-        self.fallback_recommender.fit(urm_train, ucm_all, load_matrix=load_matrix)
         self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
-                                                  load_matrix=load_matrix)
+                                                  save_matrix=save_matrix, load_matrix=load_matrix)
 
-        self.hybrid_recommender.fit(urm_train, icm_all, ucm_all, load_matrix=load_matrix)
-        # self.hybrid_recommender.fit(urm_train, icm_all, hstack((self.urm_train, ucm_all)), load_matrix=load_matrix)
+        self.hybrid_recommender.fit(urm_train, icm_all, hstack((self.urm_train, ucm_all)),
+                                    save_matrix=save_matrix, load_matrix=load_matrix)
 
     def evaluate_and_plot(self, urm_test, initial_target_users):
 
@@ -59,7 +60,6 @@ class UserWiseEvaluation(object):
         map_top_pop_per_group = []
         map_user_cf_per_group = []
 
-        map_fallback_per_group = []
         map_fallback_with_hstack_per_group = []
 
         map_hybrid_per_group = []
@@ -116,10 +116,6 @@ class UserWiseEvaluation(object):
             results = user_wise_evaluation(urm_test, users_in_group, self.user_cf_recommender, at=10)
             map_user_cf_per_group.append(results)
 
-            print("Evaluating fallback...")
-            results = user_wise_evaluation(urm_test, users_in_group, self.fallback_recommender, at=10)
-            map_fallback_per_group.append(results)
-
             print("Evaluating fallback (with hstack)...")
             results = user_wise_evaluation(urm_test, users_in_group, self.fallback_with_hstack_recommender, at=10)
             map_fallback_with_hstack_per_group.append(results)
@@ -137,7 +133,6 @@ class UserWiseEvaluation(object):
         pyplot.plot(map_slim_bpr_per_group, label="SLIM_BPR")
         pyplot.plot(map_top_pop_per_group, label="Top-Pop")
         pyplot.plot(map_user_cf_per_group, label="UserCF")
-        pyplot.plot(map_fallback_per_group, label="Fallback")
         pyplot.plot(map_fallback_with_hstack_per_group, label="Fallback (hstack)")
         pyplot.plot(map_hybrid_per_group, label="Hybrid")
 

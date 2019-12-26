@@ -22,7 +22,7 @@ class RP3betaRecommender(object):
         self.W_sparse = None
 
     def fit(self, urm_train, alpha=0.41417, beta=0.04995, top_k=54, min_rating=0, implicit=True,
-            normalize_similarity=True, load_matrix=False):
+            normalize_similarity=True, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -137,8 +137,9 @@ class RP3betaRecommender(object):
                 self.W_sparse = similarityMatrixTopK(self.W_sparse, k=self.top_k)
 
             self.W_sparse = check_matrix(self.W_sparse, format='csr')
-            sps.save_npz("../tmp/RP3beta_similarity_matrix.npz", self.W_sparse)
-
+            if save_matrix:
+                sps.save_npz("../tmp/RP3beta_similarity_matrix.npz", self.W_sparse)
+                print("Matrix saved!")
         else:
             print("Loading RP3beta_similarity_matrix.npz file...")
             self.W_sparse = sps.load_npz("../tmp/RP3beta_similarity_matrix.npz")

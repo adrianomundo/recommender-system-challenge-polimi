@@ -1,14 +1,14 @@
 import argparse
 
+from recommenders.Base import RandomRecommender, TopPopRecommender
+from recommenders.CBF import ItemCBFKNNRecommender, UserCBFKNNRecommender
+from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.GraphBased import RP3betaRecommender
-from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
+from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
+from recommenders.MF import PureSVD, IALS
 from recommenders.SLIM_BPR import SLIM_BPR
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
-from recommenders.base import RandomRecommender, TopPopRecommender
-from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
-from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
-from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
-from recommenders.MF import IALS, PureSVD
+from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -28,6 +28,7 @@ class Runner:
         self.ucm_all = None
 
         self.warm_users = None
+        self.warm_items = None
 
     def get_urm_all(self):
         urm_tuples = data_csv_splitter("urm")
@@ -58,6 +59,9 @@ class Runner:
 
     def get_warm_users(self):
         self.warm_users = get_warm_users(self.urm_all)
+
+    def get_warm_items(self):
+        self.warm_items = get_warm_items(self.urm_all)
 
     def fit_recommender(self):
         print("Fitting model...")
@@ -92,7 +96,9 @@ class Runner:
         elif self.name == 'PureSVD':
             self.recommender.fit(matrix)
         elif self.name == 'IALS':
-            self.recommender.fit(matrix)
+            self.get_warm_users()
+            self.get_warm_items()
+            self.recommender.fit(matrix, self.warm_users, self.warm_items)
         elif self.name == 'hybrid':
             self.get_icm_all()
             self.get_ucm_all()

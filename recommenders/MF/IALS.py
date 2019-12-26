@@ -1,7 +1,8 @@
-from utils.data_handler import *
 import numpy as np
 import time
 import sys
+
+from utils.data_handler import seconds_to_biggest_unit, check_matrix
 
 
 class IALSRecommender(object):
@@ -22,10 +23,9 @@ class IALSRecommender(object):
         self.USER_factors = None
         self.ITEM_factors = None
         self.C = None
-        self.urm_all = None
 
-    def fit(self, urm_train, epochs=200, num_factors=20, confidence_scaling="linear", alpha=1.0, epsilon=1.0, reg=1e-3,
-            init_mean=0.0, init_std=0.1, load_matrix=False, **earlystopping_kwargs):
+    def fit(self, urm_train, warm_users, warm_items, epochs=10, num_factors=20, confidence_scaling="linear",
+            alpha=1.0, epsilon=1.0, reg=1e-3, init_mean=0.0, init_std=0.1, **earlystopping_kwargs):
 
         self.urm_train = urm_train
         self.n_users = urm_train.shape[0]
@@ -46,10 +46,8 @@ class IALSRecommender(object):
 
         self._build_confidence_matrix(confidence_scaling)
 
-        urm_tuples = data_csv_splitter("urm")
-        self.urm_all = urm_all_builder(urm_tuples)
-        self.warm_users = get_warm_users(self.urm_all)
-        self.warm_items = get_warm_items(self.urm_all)
+        self.warm_users = warm_users
+        self.warm_items = warm_items
 
         self.regularization_diagonal = np.diag(self.reg * np.ones(self.num_factors))
 

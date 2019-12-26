@@ -53,13 +53,9 @@ class SLIM_BPR(object):
                 update = - logistic_function - self.lambda_j * self.S[neg_item_id, userSeenItem]
                 self.S[neg_item_id, userSeenItem] += self.learning_rate * update
 
-    def fit(self, urm_train, epochs=1, load_matrix=False):
+    def fit(self, urm_train, epochs=1, save_matrix=False, load_matrix=False):
         """
         Train SLIM wit BPR. If the model was already trained, overwrites matrix S
-        :param urm_train:
-        :param epochs:
-        :param load_matrix:
-        :return: -
         """
 
         self.urm_train = urm_train
@@ -87,7 +83,10 @@ class SLIM_BPR(object):
             # To be used in the product URM*S must be transposed to be column-wise
             self.W = self.S.T
             self.W = similarityMatrixTopK(self.W, k=100)
-            sps.save_npz("../tmp/SLIM_BPR_similarity_matrix.npz", self.W)
+
+            if save_matrix:
+                sps.save_npz("../tmp/SLIM_BPR_similarity_matrix.npz", self.W)
+                print("Matrix saved!")
 
             del self.S
         else:

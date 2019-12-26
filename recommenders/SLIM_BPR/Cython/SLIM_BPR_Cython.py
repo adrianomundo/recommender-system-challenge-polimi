@@ -52,7 +52,7 @@ class SLIM_BPR_Cython(object):
             symmetric=True,
             batch_size=1, lambda_i=0.0, lambda_j=0.0, learning_rate=0.01, top_k=6,
             sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
-            load_matrix=False):
+            save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
@@ -122,7 +122,10 @@ class SLIM_BPR_Cython(object):
                 current_epoch += 1
 
             self.get_S_incremental_and_set_W()
-            sps.save_npz("../tmp/SLIM_BPR_Cython_similarity_matrix.npz", self.W_sparse)
+
+            if save_matrix:
+                sps.save_npz("../tmp/SLIM_BPR_Cython_similarity_matrix.npz", self.W_sparse)
+                print("Matrix saved!")
 
             self.cython_epoch._dealloc()
 
