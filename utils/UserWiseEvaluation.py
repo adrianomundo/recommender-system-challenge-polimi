@@ -6,7 +6,7 @@ from recommenders.GraphBased import RP3betaRecommender
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 from recommenders.base import TopPopRecommender
-from recommenders.hybrids import UserCBFKNNTopPop, Hybrid
+from recommenders.Hybrids import UserCBFKNNTopPop, Hybrid
 from utils.data_handler import *
 from utils.evaluation_functions import user_wise_evaluation
 

@@ -7,7 +7,7 @@ from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.base import RandomRecommender, TopPopRecommender
 from recommenders.CBF import UserCBFKNNRecommender, ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
-from recommenders.hybrids import Hybrid, UserCBFKNNTopPop
+from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
 from recommenders.MF import IALS, PureSVD
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
