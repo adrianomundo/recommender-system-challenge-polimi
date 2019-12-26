@@ -1,7 +1,7 @@
 from bayes_opt import BayesianOptimization
 
 from recommenders.Hybrids import Hybrid
-from utils.data_handler import data_csv_splitter, urm_all_builder, train_test_holdout, icm_all_builder, ucm_all_builder
+from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
 
@@ -9,6 +9,9 @@ def run(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight
 
     urm_tuples = data_csv_splitter("urm")
     urm_all = urm_all_builder(urm_tuples)
+
+    warm_users = get_warm_users(urm_all)
+    warm_items = get_warm_items(urm_all)
 
     urm_train, urm_test = train_test_holdout(urm_all, 0.8)
 
@@ -23,7 +26,7 @@ def run(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight
 
     recommender = Hybrid.Hybrid(elastic_weight, ials_weight, item_cbf_weight, item_cf_weight, rp3_weight,
                                 slim_bpr_weight, user_cf_weight)
-    recommender.fit(urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True)
+    recommender.fit(urm_train, icm_all, ucm_all, warm_users, warm_items, save_matrix=False, load_matrix=True)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 
