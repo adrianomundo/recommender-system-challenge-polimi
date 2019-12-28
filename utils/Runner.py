@@ -1,11 +1,11 @@
 import argparse
 
-from recommenders.Base import RandomRecommender, TopPopRecommender
+from recommenders.base import RandomRecommender, TopPopRecommender
 from recommenders.CBF import ItemCBFKNNRecommender, UserCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.GraphBased import RP3betaRecommender
-from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
-from recommenders.MF import PureSVD, IALS
+from recommenders.hybrids import Hybrid, UserCBFKNNTopPop
+from recommenders.MF import PureSVD, IALS, ALS
 from recommenders.SLIM_BPR import SLIM_BPR
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
@@ -99,6 +99,8 @@ class Runner:
             self.get_warm_users()
             self.get_warm_items()
             self.recommender.fit(matrix, self.warm_users, self.warm_items)
+        elif self.name == 'ALS':
+            self.recommender.fit(matrix)
         elif self.name == 'hybrid':
             self.get_icm_all()
             self.get_ucm_all()
@@ -139,7 +141,7 @@ if __name__ == '__main__':
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
                                                                                     'SLIM_ElasticNet', 'RP3beta',
-                                                                                    'PureSVD', 'IALS',
+                                                                                    'PureSVD', 'IALS', 'ALS',
                                                                                     'hybrid', 'fallback'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -194,6 +196,10 @@ if __name__ == '__main__':
     elif args.recommender == 'IALS':
         print("IALS selected")
         recommender = IALS.IALSRecommender()
+
+    elif args.recommender == 'ALS':
+        print("ALS selected")
+        recommender = ALS.ALSRecommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
