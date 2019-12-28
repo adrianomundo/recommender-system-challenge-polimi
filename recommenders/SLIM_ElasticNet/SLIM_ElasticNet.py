@@ -19,7 +19,7 @@ class SLIMElasticNetRecommender(object):
         self.model = None
         self.W_sparse = None
 
-    def fit(self, urm_train, l1_ratio=0.1, positive_only=True, top_k=100, save_matrix=False, load_matrix=False):
+    def fit(self, urm_train, l1_ratio=1, positive_only=True, top_k=100, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
