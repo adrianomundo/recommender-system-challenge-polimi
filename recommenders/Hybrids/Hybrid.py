@@ -35,7 +35,7 @@ class Hybrid(object):
 
         self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
-    def fit(self, urm_train, icm_all, ucm_all, save_matrix=True, load_matrix=False):
+    def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
 
