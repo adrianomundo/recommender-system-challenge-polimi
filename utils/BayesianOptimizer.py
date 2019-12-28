@@ -1,17 +1,14 @@
 from bayes_opt import BayesianOptimization
 
-from recommenders.hybrids import Hybrid
+from recommenders.Hybrids import Hybrid
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
 
-def run(elastic_weight, als_weight, item_cbf_weight, item_cf_weight, rp3_weight, slim_bpr_weight, user_cf_weight):
+def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight, slim_bpr_weight, user_cf_weight):
 
     urm_tuples = data_csv_splitter("urm")
     urm_all = urm_all_builder(urm_tuples)
-
-    warm_users = get_warm_users(urm_all)
-    warm_items = get_warm_items(urm_all)
 
     urm_train, urm_test = train_test_holdout(urm_all, 0.8)
 
@@ -24,16 +21,16 @@ def run(elastic_weight, als_weight, item_cbf_weight, item_cf_weight, rp3_weight,
     ucm_region_tuples = data_csv_splitter("ucm_region")
     ucm_all = ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples)
 
-    recommender = Hybrid.Hybrid(elastic_weight, als_weight, item_cbf_weight, item_cf_weight, rp3_weight,
+    recommender = Hybrid.Hybrid(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
                                 slim_bpr_weight, user_cf_weight)
-    recommender.fit(urm_train, icm_all, ucm_all, warm_users, warm_items, save_matrix=False, load_matrix=True)
+    recommender.fit(urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True)
 
     return evaluate_algorithm(urm_test, recommender)["MAP"]
 
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'elastic_weight': (0, 5), 'als_weight': (0, 5), 'item_cbf_weight': (5, 10),
+    pbounds = {'als_weight': (0, 5), 'elastic_weight': (0, 5), 'item_cbf_weight': (5, 10),
                'item_cf_weight': (0, 8), 'rp3_weight': (4, 8), 'slim_bpr_weight': (0, 5),
                'user_cf_weight': (0, 3)}
 

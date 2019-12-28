@@ -1,6 +1,6 @@
 import numpy as np
 
-from recommenders.base import TopPopRecommender
+from recommenders.Base import TopPopRecommender
 from recommenders.CBF import UserCBFKNNRecommender
 
 
