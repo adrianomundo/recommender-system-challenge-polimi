@@ -12,8 +12,8 @@ from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 
 class Hybrid(object):
 
-    def __init__(self, als_weight=0.7952, elastic_weight=1.464, item_cbf_weight=5.977, item_cf_weight=4.636,
-                 rp3_weight=6.297, slim_bpr_weight=0.04734, user_cf_weight=0.07668):
+    def __init__(self, als_weight=0.8801, elastic_weight=2.963, item_cbf_weight=5.182, item_cf_weight=5.439,
+                 rp3_weight=5.844, slim_bpr_weight=0.01809, user_cf_weight=0.07524):
 
         self.urm_train = None
 

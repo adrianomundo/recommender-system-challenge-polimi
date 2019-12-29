@@ -14,7 +14,7 @@ class ALSRecommender(object):
     This is Alternating Least Squares.
     """
 
-    def __init__(self, n_factors=300, regularization=0.15, iterations=60):
+    def __init__(self, n_factors=400, regularization=0.11, iterations=50):
         self.n_factors = n_factors
         self.regularization = regularization
         self.iterations = iterations
@@ -43,17 +43,17 @@ class ALSRecommender(object):
             self.user_factors = model.user_factors
             self.item_factors = model.item_factors
             if save_matrix:
-                np.savez_compressed("../tmp/IALS_USER_factors_matrix.npz", self.user_factors)
-                np.savez_compressed("../tmp/IALS_ITEM_factors_matrix.npz", self.item_factors)
+                np.savez_compressed("../tmp/ALS_USER_factors_matrix.npz", self.user_factors)
+                np.savez_compressed("../tmp/ALS_ITEM_factors_matrix.npz", self.item_factors)
                 print("Matrices saved!")
-            else:
-                print("Loading IALS_USER_factors_matrix.npz file...")
-                user_factors_dict = np.load("../tmp/IALS_USER_factors_matrix.npz")
-                self.user_factors = user_factors_dict['arr_0']
-                print("Loading IALS_ITEM_factors_matrix.npz file...")
-                item_factors_dict = np.load("../tmp/IALS_ITEM_factors_matrix.npz")
-                self.item_factors = item_factors_dict['arr_0']
-                print("Matrices loaded!")
+        else:
+            print("Loading ALS_USER_factors_matrix.npz file...")
+            user_factors_dict = np.load("../tmp/ALS_USER_factors_matrix.npz")
+            self.user_factors = user_factors_dict['arr_0']
+            print("Loading ALS_ITEM_factors_matrix.npz file...")
+            item_factors_dict = np.load("../tmp/ALS_ITEM_factors_matrix.npz")
+            self.item_factors = item_factors_dict['arr_0']
+            print("Matrices loaded!")
 
     def compute_score(self, user_id):
 

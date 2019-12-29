@@ -46,11 +46,11 @@ class SLIM_BPR_Cython(object):
 
     def fit(self,
             urm_train,
-            epochs=70,
+            epochs=200,
             positive_threshold=1,
             train_with_sparse_weights=False,
             symmetric=True,
-            batch_size=1, lambda_i=0.0, lambda_j=0.0, learning_rate=0.01, top_k=6,
+            batch_size=1, lambda_i=0.0, lambda_j=0.0, learning_rate=0.01, top_k=10,
             sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
             save_matrix=False, load_matrix=False):
 
