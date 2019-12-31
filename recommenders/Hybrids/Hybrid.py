@@ -5,15 +5,21 @@ from recommenders.CBF import ItemCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.GraphBased import RP3betaRecommender
 from recommenders.Hybrids import UserCBFKNNTopPop
-from recommenders.MF import ALS
+from recommenders.MF import ALS, SVD_ICM
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
 
 
 class Hybrid(object):
 
-    def __init__(self, als_weight=0.8801, elastic_weight=2.963, item_cbf_weight=5.182, item_cf_weight=5.439,
-                 rp3_weight=5.844, slim_bpr_weight=0.01809, user_cf_weight=0.07524):
+    def __init__(self, als_weight=0.6724, elastic_weight=2.773, item_cbf_weight=5.791, item_cf_weight=4.777,
+                 rp3_weight=5.812, slim_bpr_weight=0.003819, user_cf_weight=0.07235):
+
+        # als_weight = 0.732, elastic_weight = 2.504, item_cbf_weight = 5.778, item_cf_weight = 5.472,
+        # rp3_weight = 5.648, slim_bpr_weight = 0.002682, user_cf_weight = 0.0835
+
+        # als_weight = 0.8801, elastic_weight = 2.963, item_cbf_weight = 5.182, item_cf_weight = 5.439,
+        # rp3_weight = 5.844, slim_bpr_weight = 0.01809, user_cf_weight = 0.07524):
 
         self.urm_train = None
 
@@ -24,6 +30,7 @@ class Hybrid(object):
         self.rp3_weight = rp3_weight
         self.slim_bpr_weight = slim_bpr_weight
         self.user_cf_weight = user_cf_weight
+        #self.svd_icm_weight = svd_icm_weight
 
         self.als_recommender = ALS.ALSRecommender()
         self.elastic_recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
@@ -32,10 +39,11 @@ class Hybrid(object):
         self.rp3_recommender = RP3betaRecommender.RP3betaRecommender()
         self.slim_bpr_recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
         self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
+        #self.svd_icm_recommender = SVD_ICM.SVD_ICM_Recommender()
 
         self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
 
-    def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=False):
+    def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True):
 
         self.urm_train = urm_train
 
@@ -46,9 +54,10 @@ class Hybrid(object):
         self.rp3_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.slim_bpr_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.user_cf_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
+        #self.svd_icm_recommender.fit(urm_train, icm_all, save_matrix=save_matrix,load_matrix=load_matrix)
 
         self.fallback_with_hstack_recommender.fit(urm_train, ucm_all, save_matrix=save_matrix, load_matrix=load_matrix)
-        # self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
+        #self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
         #                                          save_matrix=save_matrix, load_matrix=load_matrix)
 
     def compute_score(self, user_id):
@@ -60,6 +69,7 @@ class Hybrid(object):
         item_weights_5 = self.rp3_recommender.compute_score(user_id)
         item_weights_6 = self.slim_bpr_recommender.compute_score(user_id)
         item_weights_7 = self.user_cf_recommender.compute_score(user_id)
+        #item_weights_8 = self.svd_icm_recommender.compute_score(user_id)
 
         item_weights = item_weights_1 * self.als_weight
         item_weights += item_weights_2 * self.elastic_weight
@@ -68,6 +78,7 @@ class Hybrid(object):
         item_weights += item_weights_5 * self.rp3_weight
         item_weights += item_weights_6 * self.slim_bpr_weight
         item_weights += item_weights_7 * self.user_cf_weight
+        #item_weights += item_weights_8 * self.svd_icm_weight
 
         return item_weights
 

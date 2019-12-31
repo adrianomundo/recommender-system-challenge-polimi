@@ -5,7 +5,7 @@ from recommenders.CBF import ItemCBFKNNRecommender, UserCBFKNNRecommender
 from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
 from recommenders.GraphBased import RP3betaRecommender
 from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
-from recommenders.MF import ALS, PureSVD
+from recommenders.MF import ALS, PureSVD, SVD_ICM
 from recommenders.SLIM_BPR import SLIM_BPR
 from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
 from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
@@ -91,6 +91,9 @@ class Runner:
             self.recommender.fit(matrix)
         elif self.name == 'PureSVD':
             self.recommender.fit(matrix)
+        elif self.name == 'SVDICM':
+            self.get_icm_all()
+            self.recommender.fit(matrix, self.icm_all)
         elif self.name == 'hybrid':
             self.get_icm_all()
             self.get_ucm_all()
@@ -129,7 +132,7 @@ if __name__ == '__main__':
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
                                                                                     'SLIM_ElasticNet', 'RP3beta',
-                                                                                    'ALS', 'PureSVD',
+                                                                                    'ALS', 'PureSVD', 'SVDICM',
                                                                                     'hybrid', 'fallback'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -184,6 +187,10 @@ if __name__ == '__main__':
     elif args.recommender == 'PureSVD':
         print("PureSVD selected")
         recommender = PureSVD.PureSVDRecommender()
+
+    elif args.recommender == 'SVDICM':
+        print("SVDICM selected")
+        recommender = SVD_ICM.SVD_ICM_Recommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
