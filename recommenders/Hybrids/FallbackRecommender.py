@@ -1,17 +1,17 @@
 import numpy as np
 
-from recommenders.Base import TopPopRecommender
-from recommenders.CBF import UserCBFKNNRecommender
+from recommenders.Base.TopPopRecommender import TopPopRecommender
+from recommenders.CBF.UserCBFKNNRecommender import UserCBFKNNRecommender
 
 
-class UserCBFKNNTopPop(object):
+class FallbackRecommender(object):
 
     def __init__(self):
 
         self.urm_train = None
         self.ucm_all = None
-        self.user_cbf_recommender = UserCBFKNNRecommender.UserCBFKNNRecommender()
-        self.top_pop_recommender = TopPopRecommender.TopPopRecommender()
+        self.user_cbf_recommender = UserCBFKNNRecommender()
+        self.top_pop_recommender = TopPopRecommender()
 
     def fit(self, urm_train, ucm_all, save_matrix=False, load_matrix=False):
 

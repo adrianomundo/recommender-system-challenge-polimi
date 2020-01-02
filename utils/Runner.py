@@ -1,14 +1,20 @@
 import argparse
 
-from recommenders.Base import RandomRecommender, TopPopRecommender
-from recommenders.CBF import ItemCBFKNNRecommender, UserCBFKNNRecommender
-from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
-from recommenders.GraphBased import RP3betaRecommender
-from recommenders.Hybrids import Hybrid, UserCBFKNNTopPop
-from recommenders.MF import ALS, PureSVD, SVD_ICM
-from recommenders.SLIM_BPR import SLIM_BPR
-from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
-from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
+from recommenders.Base.RandomRecommender import RandomRecommender
+from recommenders.Base.TopPopRecommender import TopPopRecommender
+from recommenders.CBF.ItemCBFKNNRecommender import ItemCBFKNNRecommender
+from recommenders.CBF.UserCBFKNNRecommender import UserCBFKNNRecommender
+from recommenders.CF.ItemCFKNNRecommender import ItemCFKNNRecommender
+from recommenders.CF.UserCFKNNRecommender import UserCFKNNRecommender
+from recommenders.GraphBased.RP3betaRecommender import RP3betaRecommender
+from recommenders.Hybrids.HybridRecommender import HybridRecommender
+from recommenders.Hybrids.FallbackRecommender import FallbackRecommender
+from recommenders.MF.ALS import ALSRecommender
+from recommenders.MF.PureSVD import PureSVDRecommender
+from recommenders.MF.SVD_ICM import SVD_ICM_Recommender
+from recommenders.SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
+from recommenders.SLIM_BPR.SLIM_BPR import SLIM_BPR
+from recommenders.SLIM_ElasticNet.SLIM_ElasticNet import SLIMElasticNetRecommender
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -142,63 +148,63 @@ if __name__ == '__main__':
 
     if args.recommender == 'random':
         print("random selected")
-        recommender = RandomRecommender.RandomRecommender()
+        recommender = RandomRecommender()
 
     elif args.recommender == 'top_pop':
         print("top_pop selected")
-        recommender = TopPopRecommender.TopPopRecommender()
+        recommender = TopPopRecommender()
 
     elif args.recommender == 'itemCBF':
         print("itemCBF selected")
-        recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
+        recommender = ItemCBFKNNRecommender()
 
     elif args.recommender == 'userCBF':
         print("userCBF selected")
-        recommender = UserCBFKNNRecommender.UserCBFKNNRecommender()
+        recommender = UserCBFKNNRecommender()
 
     elif args.recommender == 'itemCF':
         print("itemCF selected")
-        recommender = ItemCFKNNRecommender.ItemCFKNNRecommender()
+        recommender = ItemCFKNNRecommender()
 
     elif args.recommender == 'userCF':
         print("userCF selected")
-        recommender = UserCFKNNRecommender.UserCFKNNRecommender()
+        recommender = UserCFKNNRecommender()
 
     elif args.recommender == 'SLIM_BPR':
         print("SLIM_BPR selected")
-        recommender = SLIM_BPR.SLIM_BPR()
+        recommender = SLIM_BPR()
 
     elif args.recommender == 'SLIM_BPR_Cython':
         print("SLIM_BPR_Cython selected")
-        recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
+        recommender = SLIM_BPR_Cython()
 
     elif args.recommender == 'SLIM_ElasticNet':
         print("SLIM_ElasticNet selected")
-        recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
+        recommender = SLIMElasticNetRecommender()
 
     elif args.recommender == 'RP3beta':
         print("RP3beta selected")
-        recommender = RP3betaRecommender.RP3betaRecommender()
+        recommender = RP3betaRecommender()
 
     elif args.recommender == 'ALS':
         print("ALS selected")
-        recommender = ALS.ALSRecommender()
+        recommender = ALSRecommender()
 
     elif args.recommender == 'PureSVD':
         print("PureSVD selected")
-        recommender = PureSVD.PureSVDRecommender()
+        recommender = PureSVDRecommender()
 
     elif args.recommender == 'SVDICM':
         print("SVDICM selected")
-        recommender = SVD_ICM.SVD_ICM_Recommender()
+        recommender = SVD_ICM_Recommender()
 
     elif args.recommender == 'hybrid':
         print("hybrid selected")
-        recommender = Hybrid.Hybrid()
+        recommender = HybridRecommender()
 
     elif args.recommender == 'fallback':
         print("fallback selected")
-        recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
+        recommender = FallbackRecommender()
 
     print(args)
     Runner(recommender, args.recommender, evaluate=args.eval, csv=args.csv).run()

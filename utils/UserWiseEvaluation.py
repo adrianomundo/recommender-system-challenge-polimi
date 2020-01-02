@@ -2,13 +2,15 @@ import numpy as np
 from matplotlib import pyplot
 from scipy.sparse import hstack
 
-from recommenders.Base import TopPopRecommender
-from recommenders.CBF import ItemCBFKNNRecommender
-from recommenders.CF import ItemCFKNNRecommender, UserCFKNNRecommender
-from recommenders.GraphBased import RP3betaRecommender
-from recommenders.Hybrids import UserCBFKNNTopPop, Hybrid
-from recommenders.SLIM_BPR.Cython import SLIM_BPR_Cython
-from recommenders.SLIM_ElasticNet import SLIM_ElasticNet
+from recommenders.Base.TopPopRecommender import TopPopRecommender
+from recommenders.CBF.ItemCBFKNNRecommender import ItemCBFKNNRecommender
+from recommenders.CF.ItemCFKNNRecommender import ItemCFKNNRecommender
+from recommenders.CF.UserCFKNNRecommender import UserCFKNNRecommender
+from recommenders.GraphBased.RP3betaRecommender import RP3betaRecommender
+from recommenders.Hybrids.FallbackRecommender import FallbackRecommender
+from recommenders.Hybrids.HybridRecommender import HybridRecommender
+from recommenders.SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
+from recommenders.SLIM_ElasticNet.SLIM_ElasticNet import SLIMElasticNetRecommender
 from utils.data_handler import data_csv_splitter, urm_all_builder, train_test_holdout, icm_all_builder, \
     ucm_all_builder, target_users_list
 from utils.evaluation_functions import user_wise_evaluation
@@ -20,17 +22,17 @@ class UserWiseEvaluation(object):
 
         self.urm_train = None
 
-        self.elastic_recommender = SLIM_ElasticNet.SLIMElasticNetRecommender()
-        self.item_cbf_recommender = ItemCBFKNNRecommender.ItemCBFKNNRecommender()
-        self.item_cf_recommender = ItemCFKNNRecommender.ItemCFKNNRecommender()
-        self.rp3_recommender = RP3betaRecommender.RP3betaRecommender()
-        self.slim_bpr_recommender = SLIM_BPR_Cython.SLIM_BPR_Cython()
-        self.top_pop_recommender = TopPopRecommender.TopPopRecommender()
-        self.user_cf_recommender = UserCFKNNRecommender.UserCFKNNRecommender()
+        self.elastic_recommender = SLIMElasticNetRecommender()
+        self.item_cbf_recommender = ItemCBFKNNRecommender()
+        self.item_cf_recommender = ItemCFKNNRecommender()
+        self.rp3_recommender = RP3betaRecommender()
+        self.slim_bpr_recommender = SLIM_BPR_Cython()
+        self.top_pop_recommender = TopPopRecommender()
+        self.user_cf_recommender = UserCFKNNRecommender()
 
-        self.fallback_with_hstack_recommender = UserCBFKNNTopPop.UserCBFKNNTopPop()
+        self.fallback_with_hstack_recommender = FallbackRecommender()
 
-        self.hybrid_recommender = Hybrid.Hybrid()
+        self.hybrid_recommender = HybridRecommender()
 
     def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=False):
 

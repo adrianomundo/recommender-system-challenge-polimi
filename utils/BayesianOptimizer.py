@@ -1,6 +1,6 @@
 from bayes_opt import BayesianOptimization
 
-from recommenders.Hybrids import Hybrid
+from recommenders.Hybrids.HybridRecommender import HybridRecommender
 from utils.data_handler import *
 from utils.evaluation_functions import evaluate_algorithm
 
@@ -21,8 +21,8 @@ def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
     ucm_region_tuples = data_csv_splitter("ucm_region")
     ucm_all = ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples)
 
-    recommender = Hybrid.Hybrid(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
-                                slim_bpr_weight, user_cf_weight)
+    recommender = HybridRecommender(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
+                                    slim_bpr_weight, user_cf_weight)
     recommender.fit(urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True)
 
     return evaluate_algorithm(urm_test, recommender)["recall"]
