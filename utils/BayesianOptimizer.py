@@ -25,14 +25,14 @@ def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
                                     slim_bpr_weight, user_cf_weight)
     recommender.fit(urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=True)
 
-    return evaluate_algorithm(urm_test, recommender)["recall"]
+    return evaluate_algorithm(urm_test, recommender)["MAP"]
 
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'als_weight': (0.65, 0.8), 'elastic_weight': (2.1, 3), 'item_cbf_weight': (5.3, 6.0),
-               'item_cf_weight': (4.7, 5.5), 'rp3_weight': (5.2, 6.0), 'slim_bpr_weight': (0, 0.03),
-               'user_cf_weight': (0.06, 0.09)}
+    pbounds = {'als_weight': (0, 6), 'elastic_weight': (0, 6), 'item_cbf_weight': (0, 6),
+               'item_cf_weight': (0, 6), 'rp3_weight': (0, 6), 'slim_bpr_weight': (0, 6),
+               'user_cf_weight': (0, 6)}
 
     optimizer = BayesianOptimization(
         f=run,
@@ -43,7 +43,6 @@ if __name__ == '__main__':
     optimizer.maximize(
         init_points=75,  # random steps
         n_iter=75,
-        kappa=0.1
     )
 
     print(optimizer.max)

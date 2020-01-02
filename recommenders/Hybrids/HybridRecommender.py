@@ -14,14 +14,17 @@ from recommenders.SLIM_ElasticNet.SLIM_ElasticNet import SLIMElasticNetRecommend
 
 class HybridRecommender(object):
 
+    # actual weights: 0.03598 on Kaggle
     def __init__(self, als_weight=0.6724, elastic_weight=2.773, item_cbf_weight=5.791, item_cf_weight=4.777,
                  rp3_weight=5.812, slim_bpr_weight=0.003819, user_cf_weight=0.07235):
 
+        # 0.03603 on Kaggle
         # als_weight = 0.732, elastic_weight = 2.504, item_cbf_weight = 5.778, item_cf_weight = 5.472,
         # rp3_weight = 5.648, slim_bpr_weight = 0.002682, user_cf_weight = 0.0835
 
+        # 0.03596 on Kaggle
         # als_weight = 0.8801, elastic_weight = 2.963, item_cbf_weight = 5.182, item_cf_weight = 5.439,
-        # rp3_weight = 5.844, slim_bpr_weight = 0.01809, user_cf_weight = 0.07524):
+        # rp3_weight = 5.844, slim_bpr_weight = 0.01809, user_cf_weight = 0.07524
 
         self.urm_train = None
 
@@ -56,7 +59,7 @@ class HybridRecommender(object):
         self.rp3_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.slim_bpr_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.user_cf_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
-        # self.svd_icm_recommender.fit(urm_train, icm_all, save_matrix=save_matrix,load_matrix=load_matrix)
+        # self.svd_icm_recommender.fit(urm_train, icm_all, save_matrix=save_matrix, load_matrix=load_matrix)
 
         self.fallback_with_hstack_recommender.fit(urm_train, ucm_all, save_matrix=save_matrix, load_matrix=load_matrix)
         # self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train, ucm_all)),
