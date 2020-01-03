@@ -34,9 +34,9 @@ if __name__ == '__main__':
                    'item_cf_weight': (6.5, 8), 'rp3_weight': (5.5, 7), 'slim_bpr_weight': (2.5, 3.5),
                    'user_cf_weight': (0, 0.04)}
 
-    pbounds_new = {'als_weight': (0, 1), 'elastic_weight': (1, 3), 'item_cbf_weight': (4.5, 6.5),
-                   'item_cf_weight': (4.5, 6), 'rp3_weight': (4.8, 6.5), 'slim_bpr_weight': (0, 1),
-                   'user_cf_weight': (0, 1)}
+    pbounds_new = {'als_weight': (0, 0.4), 'elastic_weight': (2.5, 3.7), 'item_cbf_weight': (5, 5.6),
+                   'item_cf_weight': (4.3, 5), 'rp3_weight': (4.6, 5.2), 'slim_bpr_weight': (0, 0.1),
+                   'user_cf_weight': (0, 0.1)}
 
     optimizer = BayesianOptimization(
         f=run,
