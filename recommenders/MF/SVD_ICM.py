@@ -1,11 +1,11 @@
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import svds
-from utils.data_handler import *
 
 """
 Recommender with SVD: Singular Value Decomposition technique applied to the item content matrix. 
 """
+
 
 class SVD_ICM_Recommender(object):
 
@@ -15,30 +15,32 @@ class SVD_ICM_Recommender(object):
         self.k = k
         self.urm_train = None
         self.icm_all = None
-        self.urm_all = None
         self.S_ICM_SVD = None
 
-    def fit(self, urm_train, icm_all, save_matrix=False, load_matrix=False):
+    def fit(self, urm_train, icm_all):
 
         self.urm_train = urm_train
+        self.icm_all = icm_all
 
-        if not load_matrix:
+        self.S_ICM_SVD = self.get_S_ICM_SVD(self.icm_all, n_factors=self.n_factors)
 
-            urm_tuples = data_csv_splitter("urm")
-            self.urm_all = urm_all_builder(urm_tuples)
+    def get_S_ICM_SVD(self, icm_all, n_factors):
 
-            self.icm_all = icm_all
+        print("Computing S_ICM_SVD...")
 
-            self.S_ICM_SVD = self.get_S_ICM_SVD(self.icm_all, n_factors=self.n_factors)
+        self.icm_all = self.icm_all.astype(np.float64)
+        self.icm_all = sparse.csr_matrix(self.icm_all)
+        u, s, vt = svds(icm_all, k=n_factors, which='LM')
 
-            if save_matrix:
-                np.save("../tmp/SVD_ICM_matrix.npz", self.S_ICM_SVD)
-                print("Matrix saved!")
+        ut = u.T
 
-        else:
-            print("Loading SVD_ICM_matrix.npz file...")
-            self.S_ICM_SVD = np.load("../tmp/SVD_ICM_matrix.npz.npy")
-            print("Matrix loaded!")
+        s_2_flatten = np.power(s, 2)
+        s_2 = np.diagflat(s_2_flatten)
+        s_2_csr = sparse.csr_matrix(s_2)
+
+        S = u.dot(s_2_csr.dot(ut))
+
+        return S
 
     def compute_score(self, user_id):
 
@@ -66,21 +68,3 @@ class SVD_ICM_Recommender(object):
         scores[user_profile] = -np.inf
 
         return scores
-
-    def get_S_ICM_SVD(self, icm_all, n_factors):
-
-        print("Computing S_ICM_SVD...")
-
-        self.icm_all = self.icm_all.astype(np.float64)
-        self.icm_all = sparse.csr_matrix(self.icm_all)
-        u, s, vt = svds(icm_all, k=n_factors, which='LM')
-
-        ut = u.T
-
-        s_2_flatten = np.power(s, 2)
-        s_2 = np.diagflat(s_2_flatten)
-        s_2_csr = sparse.csr_matrix(s_2)
-
-        S = u.dot(s_2_csr.dot(ut))
-
-        return S

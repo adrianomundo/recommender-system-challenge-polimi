@@ -10,7 +10,6 @@ from recommenders.GraphBased.RP3betaRecommender import RP3betaRecommender
 from recommenders.Hybrids.HybridRecommender import HybridRecommender
 from recommenders.Hybrids.FallbackRecommender import FallbackRecommender
 from recommenders.MF.ALS import ALSRecommender
-from recommenders.MF.LMF import LMFRecommender
 from recommenders.MF.PureSVD import PureSVDRecommender
 from recommenders.MF.SVD_ICM import SVD_ICM_Recommender
 from recommenders.SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
@@ -96,8 +95,6 @@ class Runner:
             self.recommender.fit(matrix)
         elif self.name == 'ALS':
             self.recommender.fit(matrix)
-        elif self.name == 'LMF':
-            self.recommender.fit(matrix)
         elif self.name == 'PureSVD':
             self.recommender.fit(matrix)
         elif self.name == 'SVDICM':
@@ -141,7 +138,7 @@ if __name__ == '__main__':
                                                                                     'itemCF', 'userCF',
                                                                                     'SLIM_BPR', 'SLIM_BPR_Cython',
                                                                                     'SLIM_ElasticNet', 'RP3beta',
-                                                                                    'ALS', 'LMF', 'PureSVD', 'SVDICM',
+                                                                                    'ALS', 'PureSVD', 'SVDICM',
                                                                                     'hybrid', 'fallback'])
     parser.add_argument('--eval', help="enable evaluation", action="store_true")
     parser.add_argument('--csv', help="enable csv creation", action='store_true')
@@ -192,10 +189,6 @@ if __name__ == '__main__':
     elif args.recommender == 'ALS':
         print("ALS selected")
         recommender = ALSRecommender()
-
-    elif args.recommender == 'LMF':
-        print("LMF selected")
-        recommender = LMFRecommender()
 
     elif args.recommender == 'PureSVD':
         print("PureSVD selected")

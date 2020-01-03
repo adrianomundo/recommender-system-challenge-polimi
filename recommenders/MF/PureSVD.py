@@ -17,6 +17,7 @@ class PureSVDRecommender(object):
         self.s_Vt = None
 
     def fit(self, urm_train, num_factors=100, n_iter=5, random_seed=None):
+
         print("Computing PureSVD decomposition...")
 
         self.urm_train = urm_train
@@ -31,12 +32,16 @@ class PureSVDRecommender(object):
         self.USER_factors = self.U
         self.ITEM_factors = self.s_Vt.T
 
-        print(" Computing PureSVD decomposition... Done!")
+        print("Computing PureSVD decomposition... Done!")
+
+    def compute_score(self, user_id):
+
+        user_profile = self.U[user_id]
+        return user_profile.dot(self.s_Vt)
 
     def recommend(self, user_id, at=10, exclude_seen=True):
-        scores = self.compute_score(user_id)
 
-        # TODO understand unseen_warm_items -> see repo
+        scores = self.compute_score(user_id)
 
         if exclude_seen:
             scores = self.filter_seen(user_id, scores)
@@ -44,11 +49,8 @@ class PureSVDRecommender(object):
 
         return ranking[:at]
 
-    def compute_score(self, user_id):
-        user_profile = self.U[user_id]
-        return user_profile.dot(self.s_Vt)
-
     def filter_seen(self, user_id, scores):
+
         start_pos = self.urm_train.indptr[user_id]
         end_pos = self.urm_train.indptr[user_id + 1]
 

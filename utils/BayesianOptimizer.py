@@ -30,9 +30,9 @@ def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds = {'als_weight': (0, 6), 'elastic_weight': (0, 6), 'item_cbf_weight': (0, 6),
-               'item_cf_weight': (0, 6), 'rp3_weight': (0, 6), 'slim_bpr_weight': (0, 6),
-               'user_cf_weight': (0, 6)}
+    pbounds = {'als_weight': (1.5, 3.2), 'elastic_weight': (3, 6), 'item_cbf_weight': (3, 6),
+               'item_cf_weight': (4, 7), 'rp3_weight': (3, 6), 'slim_bpr_weight': (3, 6),
+               'user_cf_weight': (0, 1)}
 
     optimizer = BayesianOptimization(
         f=run,
