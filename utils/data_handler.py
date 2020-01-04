@@ -173,11 +173,13 @@ def ucm_all_builder(urm_all, ucm_age_tuples, ucm_region_tuples):
     return ucm_all
 
 
-def train_test_holdout(urm_all, train_test_split=0.8):
+def train_test_holdout(urm_all, train_test_split=0.8, seed=123):
 
-    np.random.seed(123)
+    # Danger Zone: consider not to use a single seed for splitting the data!
+    # Testing with the following seeds: 123, 713, 187, 812, 66
+    np.random.seed(seed)
 
-    print("train_test_split: " + str(train_test_split))
+    print("train_test_split: " + str(train_test_split) + ", seed: " + str(seed))
 
     # Get the count of explicitly-stored values (non-zeros)
     num_interactions = urm_all.nnz
