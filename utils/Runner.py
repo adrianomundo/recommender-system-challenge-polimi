@@ -33,8 +33,6 @@ class Runner:
         self.icm_all = None
         self.ucm_all = None
 
-        self.warm_items = None
-
     def get_urm_all(self):
         urm_tuples = data_csv_splitter("urm")
         self.urm_all = urm_all_builder(urm_tuples)
@@ -61,9 +59,6 @@ class Runner:
     def split_dataset_loo(self):
         print("Splitting dataset using LeaveOneOut...")
         self.urm_train, self.urm_test = train_test_loo(self.urm_all)
-
-    def get_warm_items(self):
-        self.warm_items = get_warm_items(self.urm_all)
 
     def fit_recommender(self):
         print("Fitting model...")
@@ -105,8 +100,7 @@ class Runner:
         elif self.name == 'hybrid':
             self.get_icm_all()
             self.get_ucm_all()
-            self.get_warm_items()
-            self.recommender.fit(matrix, self.icm_all, self.ucm_all, self.warm_items)
+            self.recommender.fit(matrix, self.icm_all, self.ucm_all)
         elif self.name == 'fallback':
             self.get_ucm_all()
             self.recommender.fit(matrix, self.ucm_all)

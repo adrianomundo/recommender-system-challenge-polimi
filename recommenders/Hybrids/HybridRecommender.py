@@ -18,7 +18,6 @@ class HybridRecommender(object):
                  rp3_weight=5.355, slim_bpr_weight=0.004048, user_cf_weight=0.08906):
 
         self.urm_train = None
-        self.warm_items = None
 
         self.als_weight = als_weight
         self.elastic_weight = elastic_weight
@@ -38,10 +37,9 @@ class HybridRecommender(object):
 
         self.fallback_with_hstack_recommender = FallbackRecommender()
 
-    def fit(self, urm_train, icm_all, ucm_all, warm_items, save_matrix=False, load_matrix=False):
+    def fit(self, urm_train, icm_all, ucm_all, save_matrix=False, load_matrix=False):
 
         self.urm_train = urm_train
-        self.warm_items = warm_items
 
         self.als_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.elastic_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
@@ -75,7 +73,7 @@ class HybridRecommender(object):
 
         return item_weights
 
-    def recommend(self, user_id, at=10, exclude_seen=True, eliminate_cold_items=True):
+    def recommend(self, user_id, at=10, exclude_seen=True):
 
         scores = self.compute_score(user_id)
 
@@ -86,9 +84,6 @@ class HybridRecommender(object):
             scores = self.filter_seen(user_id, scores)
 
         ranking = scores.argsort()[::-1]
-
-        if eliminate_cold_items:
-            ranking = np.intersect1d(ranking, self.warm_items)
 
         return ranking[:at]
 
