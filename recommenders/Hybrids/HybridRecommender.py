@@ -49,9 +49,9 @@ class HybridRecommender(object):
         self.slim_bpr_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
         self.user_cf_recommender.fit(urm_train, save_matrix=save_matrix, load_matrix=load_matrix)
 
-        self.fallback_with_hstack_recommender.fit(urm_train, ucm_all, save_matrix=save_matrix, load_matrix=load_matrix)
-        # self.fallback_with_hstack_recommender.fit(urm_train, hstack((ucm_all, self.urm_train)),
-        #                                          save_matrix=save_matrix, load_matrix=load_matrix)
+        # self.fallback_with_hstack_recommender.fit(urm_train, ucm_all, save_matrix=save_matrix, load_matrix=load_matrix)
+        self.fallback_with_hstack_recommender.fit(urm_train, hstack((self.urm_train,ucm_all)),
+                                                  save_matrix=save_matrix, load_matrix=load_matrix)
 
     def compute_score(self, user_id):
 
