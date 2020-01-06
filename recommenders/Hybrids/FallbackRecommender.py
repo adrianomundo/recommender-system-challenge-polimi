@@ -30,7 +30,6 @@ class FallbackRecommender(object):
         scores = self.compute_score(user_id)
 
         if scores.sum() == 0.0:
-
             return self.top_pop_recommender.recommend(user_id, at)
 
         if exclude_seen:
@@ -51,46 +50,46 @@ class FallbackRecommender(object):
 
         return scores
 
-    ''' 
+    '''
     # version with merged ranking
     def recommend(self, user_id, at=10):
 
-    user_cbf_score = self.user_cbf_recommender.compute_score(user_id)
-    top_pop_ranking = self.top_pop_recommender.recommend(user_id, at)
+        user_cbf_score = self.user_cbf_recommender.compute_score(user_id)
+        top_pop_ranking = self.top_pop_recommender.recommend(user_id, at)
 
-    if user_cbf_score.sum() == 0.0:
-        return top_pop_ranking
+        if user_cbf_score.sum() == 0.0:
+            return top_pop_ranking
 
-    user_cbf_ranking = self.user_cbf_recommender.recommend(user_id, at)
+        user_cbf_ranking = self.user_cbf_recommender.recommend(user_id, at)
 
-    intersection = np.intersect1d(user_cbf_ranking, top_pop_ranking)
+        intersection = np.intersect1d(user_cbf_ranking, top_pop_ranking)
 
-    if len(intersection) == 0:
-        return user_cbf_score
+        if len(intersection) == 0:
+            return user_cbf_ranking
 
-    merged_ranking = {}
-    indices_user_cbf = []
-    indices_top_pop = []
+        merged_ranking = {}
+        indices_user_cbf = []
+        indices_top_pop = []
 
-    for item in intersection:
+        for item in intersection:
 
-        index_1 = np.where(user_cbf_ranking == item)
-        indices_user_cbf.append(index_1)
-        index_2 = np.where(top_pop_ranking == item)
-        indices_top_pop.append(index_2)
-        tmp_array = np.array([index_1, index_2])
+            index_1 = np.where(user_cbf_ranking == item)
+            indices_user_cbf.append(index_1)
+            index_2 = np.where(top_pop_ranking == item)
+            indices_top_pop.append(index_2)
+            tmp_array = np.array([index_1, index_2])
 
-        median = np.median(tmp_array)
+            median = np.median(tmp_array)
 
-        merged_ranking[item] = median
+            merged_ranking[item] = median
 
-    merged_ranking = sorted(merged_ranking, key=merged_ranking.__getitem__)
-    merged_ranking = np.asarray(merged_ranking)
+        merged_ranking = sorted(merged_ranking, key=merged_ranking.__getitem__)
+        merged_ranking = np.asarray(merged_ranking)
 
-    new_user_cbf_ranking = np.delete(user_cbf_ranking, indices_user_cbf)
-    new_top_pop_ranking = np.delete(top_pop_ranking, indices_top_pop)
+        new_user_cbf_ranking = np.delete(user_cbf_ranking, indices_user_cbf)
+        # new_top_pop_ranking = np.delete(top_pop_ranking, indices_top_pop)
 
-    merged_ranking = np.append(merged_ranking, new_user_cbf_ranking)
+        merged_ranking = np.append(merged_ranking, new_user_cbf_ranking)
 
-    return merged_ranking
+        return merged_ranking
     '''
