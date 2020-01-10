@@ -92,4 +92,29 @@ class FallbackRecommender(object):
         merged_ranking = np.append(merged_ranking, new_user_cbf_ranking)
 
         return merged_ranking
+    
+    def recommend(self, user_id, at=10):
+
+        user_cbf_score = self.user_cbf_recommender.compute_score(user_id)
+        top_pop_ranking = self.top_pop_recommender.recommend(user_id, at)
+
+        if user_cbf_score.sum() == 0.0:
+            return top_pop_ranking
+
+        user_cbf_ranking = self.user_cbf_recommender.recommend(user_id, at)
+
+        user_cbf_ranking = user_cbf_ranking[:9]
+        top_pop_ranking = top_pop_ranking[:at]
+
+        intersection = np.intersect1d(user_cbf_ranking, top_pop_ranking)
+
+        if len(intersection) == 0:
+            return user_cbf_ranking
+
+        for item in top_pop_ranking:
+            if item in intersection:
+                continue
+            user_cbf_ranking = np.append(user_cbf_ranking, item)
+            if len(user_cbf_ranking) == at:
+                return user_cbf_ranking
     '''

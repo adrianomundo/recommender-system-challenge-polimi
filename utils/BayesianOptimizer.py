@@ -30,9 +30,11 @@ def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
 
 if __name__ == '__main__':
     # Bounded region of parameter space
-    pbounds_old = {'als_weight': (1, 2), 'elastic_weight': (5.5, 7), 'item_cbf_weight': (4.5, 6),
-                   'item_cf_weight': (6.5, 8), 'rp3_weight': (5.5, 7), 'slim_bpr_weight': (2.5, 3.5),
-                   'user_cf_weight': (0, 0.04)}
+
+    # Parameters related to itemCBF with hstack (useless for the moment)
+    pbounds = {'als_weight': (0.65, 0.85), 'elastic_weight': (3.0, 3.3), 'item_cbf_weight': (0.7, 1.65),
+               'item_cf_weight': (6.0, 6.4), 'rp3_weight': (5.7, 6.05), 'slim_bpr_weight': (0.07, 0.095),
+               'user_cf_weight': (0.08, 0.11)}
 
     pbounds_new = {'als_weight': (0, 0.4), 'elastic_weight': (2.5, 3.7), 'item_cbf_weight': (5, 5.6),
                    'item_cf_weight': (4.3, 5), 'rp3_weight': (4.6, 5.2), 'slim_bpr_weight': (0, 0.1),
@@ -46,7 +48,7 @@ if __name__ == '__main__':
 
     optimizer.maximize(
         init_points=50,  # random steps
-        n_iter=100,
+        n_iter=100
     )
 
     print(optimizer.max)
