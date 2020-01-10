@@ -13,9 +13,12 @@ from recommenders.SLIM_ElasticNet.SLIM_ElasticNet import SLIMElasticNetRecommend
 
 class HybridRecommender(object):
 
-    # Actual weights: results_Dec30_14-23-13.csv - 0.03607 on Kaggle
-    def __init__(self, als_weight=0.7377, elastic_weight=2.283, item_cbf_weight=5.87, item_cf_weight=5.184,
-                 rp3_weight=5.355, slim_bpr_weight=0.004048, user_cf_weight=0.08906):
+    # results_Dec30_14-23-13.csv - 0.03607 on Kaggle
+    # als_weight=0.7377, elastic_weight=2.283, item_cbf_weight=5.87, item_cf_weight=5.184,
+    # rp3_weight=5.355, slim_bpr_weight=0.004048, user_cf_weight=0.08906
+
+    def __init__(self, als_weight=0.6438, elastic_weight=2.287, item_cbf_weight=5.891, item_cf_weight=5.098,
+                 rp3_weight=5.359, slim_bpr_weight=0.004898, user_cf_weight=0.09032):
 
         self.urm_train = None
 
