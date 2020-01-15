@@ -29,20 +29,15 @@ def run(als_weight, elastic_weight, item_cbf_weight, item_cf_weight, rp3_weight,
 
 
 if __name__ == '__main__':
+
     # Bounded region of parameter space
-
-    # Parameters related to itemCBF with hstack (useless for the moment)
-    pbounds = {'als_weight': (0.65, 0.85), 'elastic_weight': (3.0, 3.3), 'item_cbf_weight': (0.7, 1.65),
-               'item_cf_weight': (6.0, 6.4), 'rp3_weight': (5.7, 6.05), 'slim_bpr_weight': (0.07, 0.095),
-               'user_cf_weight': (0.08, 0.11)}
-
-    pbounds_new = {'als_weight': (0.6377, 0.8377), 'elastic_weight': (2.183, 2.383), 'item_cbf_weight': (5.77, 5.97),
-                   'item_cf_weight': (5.084, 5.284), 'rp3_weight': (5.255, 5.455),
-                   'slim_bpr_weight': (0.003048, 0.005048), 'user_cf_weight': (0.07906, 0.09906)}
+    pbounds = {'als_weight': (0.6377, 0.8377), 'elastic_weight': (2.183, 2.383), 'item_cbf_weight': (5.77, 5.97),
+               'item_cf_weight': (5.084, 5.284), 'rp3_weight': (5.255, 5.455),
+               'slim_bpr_weight': (0.003048, 0.005048), 'user_cf_weight': (0.07906, 0.09906)}
 
     optimizer = BayesianOptimization(
         f=run,
-        pbounds=pbounds_new,
+        pbounds=pbounds,
         verbose=2  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
     )
 
