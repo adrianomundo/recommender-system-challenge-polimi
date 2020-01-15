@@ -17,12 +17,13 @@ class HybridRecommender(object):
     # als_weight=0.7377, elastic_weight=2.283, item_cbf_weight=5.87, item_cf_weight=5.184,
     # rp3_weight=5.355, slim_bpr_weight=0.004048, user_cf_weight=0.08906
 
-    # results_Jan10_19-40-13.csv - 0.03624 on Kaggle
-    # als_weight=0.6438, elastic_weight=2.287, item_cbf_weight=5.891, item_cf_weight=5.098,
-    # rp3_weight=5.359, slim_bpr_weight=0.004898, user_cf_weight=0.09032
+    # Without SLIM_BPR, a very big regret not having tried this before
+    # Recommender performance is: Precision = 0.031990, Recall = 0.095182, MAP = 0.050218
+    # |  124      |  0.05022  |  0.6313   |  2.398    |  5.985    |  5.023    |  5.54     |  0.09042  |
 
-    def __init__(self, als_weight=0.6283, elastic_weight=2.189, item_cbf_weight=5.889, item_cf_weight=4.957,
-                 rp3_weight=5.409, slim_bpr_weight=0.003013, user_cf_weight=0.0877):
+    # results_Jan10_19-40-13.csv - 0.03624 on Kaggle
+    def __init__(self, als_weight=0.6438, elastic_weight=2.287, item_cbf_weight=5.891, item_cf_weight=5.098,
+                 rp3_weight=5.359, slim_bpr_weight=0.004898, user_cf_weight=0.09032):
 
         self.urm_train = None
 
